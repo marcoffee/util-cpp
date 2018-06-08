@@ -126,7 +126,7 @@ vec_n<T, sizeof...(ARGS) + 1> make_vec_n (T val, uintmax_t size, ARGS&&... args)
 }
 
 template <typename T, uintmax_t C>
-std::array<uintmax_t, C> max_vec_n (vec_n<T, C> const& vec, T& val = _defref_v<T>) {
+std::array<uintmax_t, C> max_vec_n (vec_n<T, C> const& vec, T& val = def_ref<T>) {
   std::array<uintmax_t, C> result;
 
   if constexpr (C == 1) {

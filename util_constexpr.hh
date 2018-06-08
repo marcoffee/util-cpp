@@ -121,16 +121,7 @@ constexpr std::array<T, static_log2_v<count_bits_v<T>>>
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-struct _defref {
-public:
-  static T value;
-};
-
-template <typename T>
-T _defref<T>::value;
-
-template <typename T>
-T& _defref_v = _defref<T>::value;
+static T def_ref;
 
 ////////////////////////////////////////////////////////////////////////////////
 

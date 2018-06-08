@@ -40,10 +40,7 @@ constexpr std::string_view rsplit (
   return str.substr(pos + 1);
 }
 
-template <typename... ARGS>
-constexpr std::string_view split (ARGS&&... args) {
-  return lsplit(std::forward<ARGS>(args)...);
-}
+constexpr auto split = lsplit;
 
 std::vector<std::string_view> split_all (
   std::string_view str, std::string_view const& delim,

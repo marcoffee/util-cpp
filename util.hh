@@ -14,6 +14,7 @@
 
 #include "argparse/argparse.hh"
 #include "bitset/bitset.hh"
+#include "evolution/evolution.hh"
 
 template <typename T>
 std::unordered_map<T, uintmax_t> invert_vector (std::vector<T> const& vec) {

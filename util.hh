@@ -10,6 +10,7 @@
 #include "stream.hh"
 #include "string.hh"
 #include "container.hh"
+#include "interrupt.hh"
 #include "ndimensional_iterator.hh"
 
 #include "argparse/argparse.hh"

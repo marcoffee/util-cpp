@@ -47,6 +47,16 @@ std::vector<std::string_view> split_all (
   bool left = true, uintmax_t limit = 0
 );
 
+constexpr auto lsplit_all = [] (
+  std::string_view str, std::string_view const& delim,
+  uintmax_t limit = 0
+) { return split_all(str, delim, true, limit); };
+
+constexpr auto rsplit_all = [] (
+  std::string_view str, std::string_view const& delim,
+  uintmax_t limit = 0
+) { return split_all(str, delim, false, limit); };
+
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>

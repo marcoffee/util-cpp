@@ -3,19 +3,15 @@
 #include <mutex>
 #include <atomic>
 #include <algorithm>
+#include <memory>
 #include <type_traits>
 #include "util_constexpr.hh"
 
-namespace memory_stats {
-  void add_memory (uintmax_t count);
-  void del_memory (uintmax_t count);
-
-  uintmax_t now (void);
-  uintmax_t peak (void);
-  uintmax_t total (void);
-};
-
-template <typename T, bool enable_cast = false, bool mem_stats = true>
+template <
+  typename T,
+  bool enable_cast = false,
+  typename Alloc = std::allocator<typename std::remove_extent<T>::type>
+>
 class ts_ptr {
 public:
   constexpr static bool is_array = std::is_array<T>::value;
@@ -23,6 +19,7 @@ public:
   using type_ptr = type*;
 
 private:
+  Alloc _alloc;
   uintmax_t _size = 0;
   type_ptr _ptr = nullptr;
   uintmax_t *_count = nullptr;
@@ -34,20 +31,7 @@ private:
   }
 
   constexpr void free (void) {
-    if constexpr (ts_ptr::is_array) {
-      delete[] this->_ptr;
-
-      if constexpr (mem_stats) {
-        memory_stats::del_memory(sizeof(type) * this->size());
-      }
-
-    } else {
-      delete this->_ptr;
-
-      if constexpr (mem_stats) {
-        memory_stats::del_memory(sizeof(type));
-      }
-    }
+    this->_alloc.deallocate(this->_ptr, this->size());
 
     delete this->_count;
 
@@ -132,14 +116,10 @@ public:
     this->dec();
     this->_size = size;
 
-    if (zero) {
-      this->_ptr = new type[size]();
-    } else {
-      this->_ptr = new type[size];
-    }
+    this->_ptr = this->_alloc.allocate(size);
 
-    if constexpr (mem_stats) {
-      memory_stats::add_memory(sizeof(type) * size);
+    if (zero) {
+      std::fill(this->_ptr, this->_ptr + size, type());
     }
 
     this->init_storage();
@@ -148,11 +128,10 @@ public:
   template <typename X = void, typename = std::enable_if_t<!is_array, X>, typename... ARGS>
   constexpr void allocate (ARGS&&... args) {
     this->dec();
-    this->_ptr = new type(std::forward<ARGS>(args)...);
+    this->_size = 1;
 
-    if constexpr (mem_stats) {
-      memory_stats::add_memory(sizeof(type));
-    }
+    this->_ptr = this->_alloc.allocate(1);
+    *this->_ptr = type(std::forward<ARGS>(args)...);
 
     this->init_storage();
   }
@@ -195,10 +174,7 @@ public:
   template <typename X = void, typename = std::enable_if_t<enable_cast, X>>
   constexpr operator const type_ptr (void) const { return this->_ptr; }
 
-  template <typename X = void, typename = std::enable_if_t<is_array, X>>
   constexpr uintmax_t const& size (void) const { return this->_size; }
-
-  template <typename X = void, typename = std::enable_if_t<is_array, X>>
   constexpr bool empty (void) const { return this->_size == 0; }
 
   constexpr uintmax_t const& count (void) const { return *this->_count; }

@@ -23,29 +23,29 @@
 namespace util::vector {
 
   template <typename T, uintmax_t C>
-  struct _vec_n {
-    using type = std::vector<typename _vec_n<T, C - 1>::type>;
+  struct _multi {
+    using type = std::vector<typename _multi<T, C - 1>::type>;
   };
 
   template <typename T>
-  struct _vec_n<T, 0> {
+  struct _multi<T, 0> {
     using type = T;
   };
 
   template <typename T, uintmax_t C>
-  using vec_n = typename _vec_n<T, C>::type;
+  using multi = typename _multi<T, C>::type;
 
   template <typename T, typename... ARGS>
-  vec_n<T, sizeof...(ARGS) + 1> make_vec_n (T val, uintmax_t size, ARGS&&... args) {
+  multi<T, sizeof...(ARGS) + 1> make_multi (T val, uintmax_t size, ARGS&&... args) {
     if constexpr (sizeof...(ARGS) == 0) {
       return std::vector<T>(size, val);
 
     } else {
-      vec_n<T, sizeof...(ARGS) + 1> result;
+      multi<T, sizeof...(ARGS) + 1> result;
       result.reserve(size);
 
       for (uintmax_t i = 0; i < size; ++i) {
-        result.emplace_back(std::move(make_vec_n(val, std::forward<ARGS>(args)...)));
+        result.emplace_back(std::move(make_multi(val, std::forward<ARGS>(args)...)));
       }
 
       return result;
@@ -53,7 +53,7 @@ namespace util::vector {
   }
 
   template <typename T, uintmax_t C, uintmax_t P, bool min>
-  bool _minmax_vec_n (vec_n<T, C - P> const& vec, T& val, std::array<uintmax_t, C> &result) {
+  bool _minmax_multi (multi<T, C - P> const& vec, T& val, std::array<uintmax_t, C> &result) {
     bool changed = false;
 
     if constexpr (C - P == 1) {
@@ -78,7 +78,7 @@ namespace util::vector {
 
     } else {
       for (uintmax_t i = 0; i < vec.size(); ++i) {
-        if (_minmax_vec_n<T, C, P + 1, min>(vec[i], val, result)) {
+        if (_minmax_multi<T, C, P + 1, min>(vec[i], val, result)) {
           result[P] = i;
           changed = true;
         }
@@ -90,17 +90,17 @@ namespace util::vector {
   }
 
   template <typename T, uintmax_t C>
-  std::array<uintmax_t, C> min_vec_n (vec_n<T, C> const& vec, T& val) {
+  std::array<uintmax_t, C> min_multi (multi<T, C> const& vec, T& val) {
     std::array<uintmax_t, C> result;
-    _minmax_vec_n<T, C, C, true>(vec, val, result);
+    _minmax_multi<T, C, C, true>(vec, val, result);
 
     return result;
   }
 
   template <typename T, uintmax_t C>
-  std::array<uintmax_t, C> max_vec_n (vec_n<T, C> const& vec, T& val) {
+  std::array<uintmax_t, C> max_multi (multi<T, C> const& vec, T& val) {
     std::array<uintmax_t, C> result;
-    _minmax_vec_n<T, C, C, false>(vec, val, result);
+    _minmax_multi<T, C, C, false>(vec, val, result);
 
     return result;
   }

@@ -7,8 +7,11 @@
 #include <unordered_map>
 
 #include "util_constexpr.hh"
+#include "base.hh"
 #include "stream.hh"
 #include "string.hh"
+#include "iterator.hh"
+#include "allocator.hh"
 #include "container.hh"
 #include "interrupt.hh"
 #include "ndimensional_iterator.hh"
@@ -17,136 +20,89 @@
 #include "bitset/bitset.hh"
 #include "evolution/evolution.hh"
 
-template <typename T>
-std::unordered_map<T, uintmax_t> invert_vector (std::vector<T> const& vec) {
-  std::unordered_map<T, uintmax_t> result;
-  result.reserve(vec.size());
+namespace util::vector {
 
-  for (uintmax_t i = 0; i < vec.size(); ++i) {
-    result.emplace(vec[i], i);
-  }
+  template <typename T, uintmax_t C>
+  struct _vec_n {
+    using type = std::vector<typename _vec_n<T, C - 1>::type>;
+  };
 
-  return result;
-}
+  template <typename T>
+  struct _vec_n<T, 0> {
+    using type = T;
+  };
 
-template <typename T>
-std::vector<T> subvector (std::vector<T> const& vec, intmax_t begin, intmax_t end) {
-  if (begin < 0) {
-    begin += vec.size();
-  }
+  template <typename T, uintmax_t C>
+  using vec_n = typename _vec_n<T, C>::type;
 
-  if (end < 0) {
-    end += vec.size();
-  }
+  template <typename T, typename... ARGS>
+  vec_n<T, sizeof...(ARGS) + 1> make_vec_n (T val, uintmax_t size, ARGS&&... args) {
+    if constexpr (sizeof...(ARGS) == 0) {
+      return std::vector<T>(size, val);
 
-  return std::vector<T>(vec.begin() + begin, vec.begin() + end + 1);
-}
+    } else {
+      vec_n<T, sizeof...(ARGS) + 1> result;
+      result.reserve(size);
 
-template <typename T>
-std::vector<uintmax_t> argsort (T const& vec, uintmax_t size, uintmax_t shift = 0) {
-  std::vector<uintmax_t> result(size);
-  std::iota(result.begin(), result.end(), shift);
+      for (uintmax_t i = 0; i < size; ++i) {
+        result.emplace_back(std::move(make_vec_n(val, std::forward<ARGS>(args)...)));
+      }
 
-  std::stable_sort(result.begin(), result.end(),
-    [ &vec ] (uintmax_t a, uintmax_t b) {
-      return vec[a] < vec[b];
+      return result;
     }
-  );
-
-  return result;
-}
-
-template <typename T, typename I>
-std::vector<T> subindex (std::vector<T> const& vec, std::vector<I> const& idx) {
-  std::vector<T> result;
-  result.reserve(idx.size());
-
-  for (I const& i : idx) {
-    result.emplace_back(vec[i]);
   }
 
-  return result;
-}
+  template <typename T, uintmax_t C, uintmax_t P, bool min>
+  bool _minmax_vec_n (vec_n<T, C - P> const& vec, T& val, std::array<uintmax_t, C> &result) {
+    bool changed = false;
 
-template <typename T, typename U>
-std::vector<T> convert_vector (std::vector<U> const& vec) {
-  std::vector<T> result;
-  result.reserve(vec.size());
+    if constexpr (C - P == 1) {
+      if constexpr (min) {
+        auto it = std::max_element(vec.begin(), vec.end());
 
-  for (U const& u : vec) {
-    result.emplace_back(u);
-  }
+        if (*it > val) {
+          val = *it;
+          result[P] = std::distance(vec.begin(), it);
+          changed = true;
+        }
 
-  return result;
-}
+      } else {
+        auto it = std::min_element(vec.begin(), vec.end());
 
-template <typename T>
-std::vector<T> reverse_vector (std::vector<T> const& vec) {
-  return std::vector<T>(vec.rbegin(), vec.rend());
-}
+        if (*it < val) {
+          val = *it;
+          result[P] = std::distance(vec.begin(), it);
+          changed = true;
+        }
+      }
 
-template <typename T, typename... ARGS>
-inline void real_clear (std::vector<T>& vec, ARGS&&... args) {
-  vec.clear();
-  vec.shrink_to_fit();
+    } else {
+      for (uintmax_t i = 0; i < vec.size(); ++i) {
+        if (_minmax_vec_n<T, C, P + 1, min>(vec[i], val, result)) {
+          result[P] = i;
+          changed = true;
+        }
+      }
 
-  if constexpr (sizeof...(ARGS) > 0) {
-    real_clear(std::forward<ARGS>(args)...);
-  }
-}
-
-template <typename T, uintmax_t C>
-struct _vec_n {
-  using type = std::vector<typename _vec_n<T, C - 1>::type>;
-};
-
-template <typename T>
-struct _vec_n<T, 0> {
-  using type = T;
-};
-
-template <typename T, uintmax_t C>
-using vec_n = typename _vec_n<T, C>::type;
-
-template <typename T, typename... ARGS>
-vec_n<T, sizeof...(ARGS) + 1> make_vec_n (T val, uintmax_t size, ARGS&&... args) {
-  if constexpr (sizeof...(ARGS) == 0) {
-    return std::vector<T>(size, val);
-
-  } else {
-    vec_n<T, sizeof...(ARGS) + 1> result;
-    result.reserve(size);
-
-    for (uintmax_t i = 0; i < size; ++i) {
-      result.emplace_back(std::move(make_vec_n(val, std::forward<ARGS>(args)...)));
     }
+
+    return changed;
+  }
+
+  template <typename T, uintmax_t C>
+  std::array<uintmax_t, C> min_vec_n (vec_n<T, C> const& vec, T& val) {
+    std::array<uintmax_t, C> result;
+    _minmax_vec_n<T, C, C, true>(vec, val, result);
 
     return result;
   }
-}
 
-template <typename T, uintmax_t C>
-std::array<uintmax_t, C> max_vec_n (vec_n<T, C> const& vec, T& val = def_ref<T>) {
-  std::array<uintmax_t, C> result;
+  template <typename T, uintmax_t C>
+  std::array<uintmax_t, C> max_vec_n (vec_n<T, C> const& vec, T& val) {
+    std::array<uintmax_t, C> result;
+    _minmax_vec_n<T, C, C, false>(vec, val, result);
 
-  if constexpr (C == 1) {
-    auto it = std::max_element(vec.begin(), vec.end());
-    val = *it;
-    result[0] = std::distance(vec.begin(), it);
-  } else {
-    val = std::numeric_limits<T>::lowest();
-
-    for (uintmax_t i = 0; i < vec.size(); ++i) {
-      T found;
-      std::array<uintmax_t, C - 1> pos = max_vec_n<T, C - 1>(vec[i], found);
-
-      if (found > val) {
-        std::copy_n(pos.begin(), C - 1, result.begin() + 1);
-        result[0] = i;
-        val = std::move(found);
-      }
-    }
+    return result;
   }
 
-  return result;
-}
+};

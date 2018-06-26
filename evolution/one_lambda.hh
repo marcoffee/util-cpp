@@ -5,7 +5,7 @@
 namespace util::evolution {
 
   __EVO_TMPL_HEAD
-  class one_lambda : public base<T, F, R> {
+  class one_lambda : public __BASE_CLASS {
 
   public:
     __EVO_USING;
@@ -28,12 +28,20 @@ namespace util::evolution {
 
     uintmax_t _lambda;
 
-    chr_t _best_chr;
-    fit_t _best_fit;
+    chr_t _chr;
+    fit_t _fit;
 
     void copy_meta (one_lambda const& evo, bool rec = true);
     one_lambda& copy_from (one_lambda const& evo, bool rec = true);
     one_lambda& move_from (one_lambda& evo, bool rec = true);
+
+    void make_step (void) override;
+
+    chr_t* chr_ptr (void) override { return &this->_chr; }
+    fit_t* fit_ptr (void) override { return &this->_fit; }
+
+    chr_t const* chr_ptr (void) const override { return &this->_chr; }
+    fit_t const* fit_ptr (void) const override { return &this->_fit; }
 
   public:
 
@@ -43,28 +51,23 @@ namespace util::evolution {
       uintmax_t lambda
     );
 
-    one_lambda (one_lambda const& evo) :
-      evo_t(evo),
-      _create(evo._create), _mutate(evo._mutate), _evaluate(evo._evaluate),
-      _compare(evo._compare),
-      _lambda(evo._lambda),
-      _best_chr(evo._best_chr), _best_fit(evo._best_fit) {};
+    one_lambda (one_lambda const& evo) { this->copy_from(evo); };
+    one_lambda (one_lambda&& evo) { this->move_from(std::move(evo)); };
+
+    one_lambda& operator = (one_lambda const& evo) { return this->copy_from(evo); };
+    one_lambda& operator = (one_lambda&& evo) { return this->move_from(std::move(evo)); };
 
     ~one_lambda (void);
 
-    void step (void) override;
+    evo_t* copy (void) const override { return new one_lambda(*this); }
 
     const uintmax_t& lambda (void) const { return this->_lambda; }
     void lambda (uintmax_t lambda) { this->_lambda = lambda; }
 
     uintmax_t size (void) const override { return 1; }
-
-    const_iterator cbegin (void) const override { return &this->_best_chr; }
-    const_fit_iterator cfitbegin (void) const override { return &this->_best_fit; }
-
   };
 
-  __EVO_TMPL(one_lambda, void)::copy_meta (one_lambda const& evo, bool rec) {
+  __EVO_TMPL(void, one_lambda)::copy_meta (one_lambda const& evo, bool rec) {
     if (rec) {
       evo_t::copy_meta(evo, true);
     }
@@ -72,7 +75,7 @@ namespace util::evolution {
     this->_lambda = evo._lambda;
   }
 
-  __EVO_TMPL(one_lambda, __EVO_CLASS(one_lambda)&)::copy_from (
+  __EVO_TMPL(__EVO_CLASS(one_lambda)&, one_lambda)::copy_from (
     one_lambda const& evo, bool rec
   ) {
     this->copy_meta(evo, false);
@@ -86,13 +89,13 @@ namespace util::evolution {
     this->_evaluate = evo._evaluate;
     this->_compare = evo._compare;
 
-    this->_best_chr = evo._best_chr;
-    this->_best_fit = evo._best_fit;
+    this->_chr = evo._chr;
+    this->_fit = evo._fit;
 
     return *this;
   }
 
-  __EVO_TMPL(one_lambda, __EVO_CLASS(one_lambda)&)::move_from (
+  __EVO_TMPL(__EVO_CLASS(one_lambda)&, one_lambda)::move_from (
     one_lambda& evo, bool rec
   ) {
     this->copy_meta(evo, false);
@@ -106,31 +109,31 @@ namespace util::evolution {
     this->_evaluate = std::move(evo._evaluate);
     this->_compare = std::move(evo._compare);
 
-    this->_best_chr = std::move(evo._best_chr);
-    this->_best_fit = std::move(evo._best_fit);
+    this->_chr = std::move(evo._chr);
+    this->_fit = std::move(evo._fit);
 
     return *this;
   }
 
-  __EVO_TMPL(one_lambda, EMPTY_ARG)::one_lambda(
+  __EVO_TMPL(EMPTY_ARG, one_lambda)::one_lambda(
     uintmax_t seed,
     creator create, mutator mutate, evaluator evaluate, comparator compare,
     uintmax_t lambda
-  ) : base<T, F, R>(seed),
+  ) : evo_t(seed),
       _create(create), _mutate(mutate), _evaluate(evaluate), _compare(compare),
       _lambda(lambda) {
 
-    this->_best_chr = create(this->_rnd);
-    this->_best_fit = this->_evaluate(this->_best_chr);
+    this->_chr = create(this->_rnd);
+    this->_fit = this->_evaluate(this->_chr);
   }
 
-  __EVO_TMPL(one_lambda, EMPTY_ARG)::~one_lambda (void) {}
+  __EVO_TMPL(EMPTY_ARG, one_lambda)::~one_lambda (void) {}
 
-  __EVO_TMPL(one_lambda, void)::step (void) {
+  __EVO_TMPL(void, one_lambda)::make_step (void) {
     bool changed = false;
 
-    chr_t old_chr(std::move(this->_best_chr));
-    fit_t old_fit(std::move(this->_best_fit));
+    chr_t old_chr(std::move(this->_chr));
+    fit_t old_fit(std::move(this->_fit));
 
     fit_t const* best_fit = &old_fit;
 
@@ -141,16 +144,16 @@ namespace util::evolution {
       fit_t i_fit = this->_evaluate(indiv);
 
       if (this->_compare(i_fit, *best_fit)) {
-        this->_best_chr = std::move(indiv);
-        this->_best_fit = std::move(i_fit);
-        best_fit = &this->_best_fit;
+        this->_chr = std::move(indiv);
+        this->_fit = std::move(i_fit);
+        best_fit = &this->_fit;
         changed = true;
       }
     }
 
     if (!changed) {
-      this->_best_chr = std::move(old_chr);
-      this->_best_fit = std::move(old_fit);
+      this->_chr = std::move(old_chr);
+      this->_fit = std::move(old_fit);
     }
   }
 

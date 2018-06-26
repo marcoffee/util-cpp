@@ -1,5 +1,8 @@
 #pragma once
 
+#include <numeric>
+#include "../util_constexpr.hh"
+
 #define TEMPL_ITERATOR(IT) \
   typename = std::enable_if_t<is_iterator_v<IT>>, \
   typename IT ## C = typename std::iterator_traits<IT>::iterator_category, \

@@ -10,15 +10,14 @@
 #include "base.hh"
 #include "stream.hh"
 #include "string.hh"
-#include "iterator.hh"
 #include "allocator.hh"
 #include "container.hh"
 #include "interrupt.hh"
-#include "ndimensional_iterator.hh"
 
-#include "argparse/argparse.hh"
-#include "bitset/bitset.hh"
-#include "evolution/evolution.hh"
+#include "bitset.hh"
+#include "iterator.hh"
+#include "argparse.hh"
+#include "evolution.hh"
 
 namespace util::vector {
 

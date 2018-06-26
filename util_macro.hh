@@ -2,6 +2,9 @@
 
 #include <iterator>
 
+#define EMPTY_ARG
+#define COMMA ,
+
 #ifndef RST_LINE
   #define RST_LINE "\r\033[K"
 #endif
@@ -10,14 +13,20 @@
   #define WHITESPACE " \f\n\r\t\v"
 #endif
 
+#define STRINGIFY(x) #x
+#define TO_STRING(x) STRINGIFY(x)
+
+#ifdef _OPENMP
+  #define IF_OMP(v) _Pragma(TO_STRING(omp v))
+#else
+  #define IF_OMP(v)
+#endif
+
 #if __cpp_if_constexpr >= 201606
   #define if_static(x) if constexpr(x)
 #else
   #define if_static(x) if (x)
 #endif
-
-#define EMPTY_ARG
-#define COMMA ,
 
 #define macro_ternary_(t, f) f
 #define macro_ternary_0(t, f) f

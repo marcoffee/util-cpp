@@ -8,7 +8,7 @@
 #include <random>
 #include "../util_constexpr.hh"
 #include "../ts_ptr.hh"
-#include "bitset_macros.hh"
+#include "macros.hh"
 
 class bitset {
 public:

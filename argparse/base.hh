@@ -7,7 +7,7 @@
 #include <vector>
 #include <unordered_set>
 #include <unordered_map>
-#include "argparse_except.hh"
+#include "exception.hh"
 
 namespace util {
 

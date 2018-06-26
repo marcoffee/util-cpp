@@ -1,5 +1,5 @@
-#include "bitset.hh"
-#include "bitset_macros.hh"
+#include "base.hh"
+#include "macros.hh"
 
 void bitset::fill_data (bool zeros) {
   uintmax_t last;

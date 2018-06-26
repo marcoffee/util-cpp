@@ -167,16 +167,16 @@ namespace util {
     std::string& get_ref (std::string const& name);
     std::string const& get_ref (std::string const& name) const;
 
-    template <typename T>
+    template <typename T = std::string>
     T get (std::string const& name, conversor<T> const& convert = params::default_conversor<T>) const;
 
-    template <typename T>
+    template <typename T = std::string>
     T get (std::string const& name, T const& def, conversor<T> const& convert = params::default_conversor<T>) const;
 
-    template <typename T>
+    template <typename T = std::string>
     T const& get (std::string const& name, string_map<T> const& convert, T const& def) const;
 
-    template <typename T>
+    template <typename T = std::string>
     bool get (std::string const& name, iterator<T>& beg, iterator<T>& end, conversor<T> const& convert = params::default_conversor<T>) const;
 
     friend std::ostream& operator << (std::ostream& out, params const& args);

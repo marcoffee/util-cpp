@@ -5,9 +5,20 @@ import sys
 import argparse
 import itertools as it
 
+class HeaderNotFound (Exception):
+    def __init__ (self, header, file, line):
+        super().__init__(
+            "Header {} not found at {}@{}".format(header, file, line)
+        )
+
 def fetch_headers (fname):
+    fpath = os.path.dirname(fname)
+    lineno = 0
+
     with open(fname) as file:
         for line in map(str.strip, file):
+            lineno += 1
+
             if not line.startswith("#include"):
                 continue
 
@@ -18,7 +29,13 @@ def fetch_headers (fname):
                 line = line[ : comm ].rstrip()
 
             if line[0] == "\"" and line[-1] == "\"":
-                yield line[ 1 : -1 ]
+                hname = line[ 1 : -1 ]
+                header = os.path.join(fpath, hname)
+
+                if not os.path.isfile(header):
+                    raise HeaderNotFound(hname, fname, lineno)
+
+                yield header
 
 argparser = argparse.ArgumentParser()
 
@@ -60,8 +77,12 @@ def main (argv):
                 if os.path.isfile(fname):
                     files.append(fname)
 
-        fpath = os.path.dirname(file)
-        files.extend(os.path.join(fpath, f) for f in fetch_headers(file))
+        try:
+            files.extend(fetch_headers(file))
+
+        except HeaderNotFound as e:
+            print(e, file = sys.stderr)
+            exit(1)
 
     print(" ".join(result))
 

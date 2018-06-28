@@ -167,10 +167,10 @@ namespace util {
     std::string& get_ref (std::string const& name);
     std::string const& get_ref (std::string const& name) const;
 
-    template <typename T = std::string>
+    template <typename T = std::string const&>
     T get (std::string const& name, conversor<T> const& convert = params::default_conversor<T>) const;
 
-    template <typename T = std::string>
+    template <typename T = std::string const&>
     T get (std::string const& name, T const& def, conversor<T> const& convert = params::default_conversor<T>) const;
 
     template <typename T = std::string>
@@ -185,13 +185,7 @@ namespace util {
 
   template <typename T>
   T argparse::params::get (std::string const& name, conversor<T> const& convert) const {
-    auto it = this->_data.find(name);
-
-    if (it != this->_data.end()) {
-      return convert(it->second.front());
-    }
-
-    throw std::out_of_range("Parameter '" + name + "' not found.");
+    return convert(this->get_ref(name));
   }
 
   template <typename T>

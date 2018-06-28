@@ -60,6 +60,13 @@ namespace util {
     throw std::out_of_range("Parameter '" + name + "' not found.");
   }
 
+  template <>
+  std::string const& argparse::params::get<std::string const&> (
+    std::string const& name, conversor<std::string const&> const&
+  ) const {
+    return this->get_ref(name);
+  }
+
   std::ostream& operator << (std::ostream& out, argparse::params const& args) {
     for (string_pair<string_vector> const& kv : args._data) {
       out << kv.first << ": ";

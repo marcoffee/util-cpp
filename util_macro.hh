@@ -28,8 +28,12 @@
   #define if_static(x) if (x)
 #endif
 
-#define do_every(every, max, at) \
-if ((every) != 0 && ((((at) + (every) >= (max))) || (((at) % (every)) == 0)))
+#define do_every(start, every, max, at) \
+if ((every) != 0 && ( \
+  ((at) == (start)) || \
+  (((max) != 0) && ((at) + (every) >= (max))) || \
+  (((at) % (every)) == 0) \
+))
 
 #define macro_ternary_(t, f) f
 #define macro_ternary_0(t, f) f

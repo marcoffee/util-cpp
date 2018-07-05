@@ -11,6 +11,7 @@
 #include "vector.hh"
 #include "stream.hh"
 #include "string.hh"
+#include "resources.hh"
 #include "allocator.hh"
 #include "container.hh"
 #include "interrupt.hh"

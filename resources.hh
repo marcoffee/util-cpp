@@ -1,8 +1,7 @@
 #pragma once
 
+#include <algorithm>
 #include <cstdint>
-
-using uintmax_t = std::uintmax_t;
 
 namespace rss {
   uintmax_t peak (void);

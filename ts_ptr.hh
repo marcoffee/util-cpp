@@ -118,8 +118,8 @@ public:
 
     this->_ptr = this->_alloc.allocate(size);
 
-    if (zero) {
-      std::fill(this->_ptr, this->_ptr + size, type());
+    for (uintmax_t i = 0; i < size; ++i) {
+      new (this->_ptr + i) type();
     }
 
     this->init_storage();

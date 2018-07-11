@@ -75,7 +75,7 @@ namespace util::evolution {
     genetic (siz_t size, double m_prob, sed_t seed = 0)
       : evo_t(size + size, seed), _popsize(size), _m_prob(m_prob) {}
 
-    virtual evo_t* copy (void) const { return new gen_t(*this); }
+    evo_t* copy (void) const { return new gen_t(*this); }
 
     void set_crossover (crossover const& cross) { this->_cross = cross; }
     void set_mutator (mutator const& mutate) { this->_mutate = mutate; }

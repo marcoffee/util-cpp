@@ -27,7 +27,7 @@ namespace util::evolution {
     }
 
     siz_t evolve (chr_t* chr, fit_t* fit, siz_t) override {
-      chr_t& best = this->chr_at(0);
+      chr_t const& best = this->chr_at(0);
 
       for (siz_t i = 0; i < this->lambda(); ) {
         for (chr_t& child : this->mutate(best)) {
@@ -65,7 +65,7 @@ namespace util::evolution {
     one_lambda (uintmax_t lambda, uintmax_t seed)
       : evo_t(1 + lambda, seed), _lambda(lambda) {};
 
-    virtual evo_t* copy (void) const override { return new one_lambda(*this); }
+    evo_t* copy (void) const override { return new one_lambda(*this); }
 
     void set_mutator (mutator const& mutate) { this->_mutate = mutate; }
     chr_v mutate (chr_t const& chr) { return this->_mutate(*this, chr); }

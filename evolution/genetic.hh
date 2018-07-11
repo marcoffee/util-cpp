@@ -19,8 +19,8 @@ namespace util::evolution {
     siz_t _elitism = 1;
     double _m_prob;
 
-    mutator _mutate = nullptr;
     crossover _cross = nullptr;
+    mutator _mutate = nullptr;
 
     siz_t initialize (chr_t* chr, fit_t* fit, siz_t) override {
       for (siz_t i = 0; i < this->popsize(); ++i) {
@@ -37,13 +37,13 @@ namespace util::evolution {
       for (siz_t i = 0; i < this->popsize(); ) {
         chr_v off;
 
-        for (chr_t& child : this->_cross(*this)) {
+        for (chr_t& child : this->cross()) {
           if (dist(this->random()) > this->_m_prob) {
             off.emplace_back(std::move(child));
             continue;
           }
 
-          chr_v mutation = this->_mutate(*this, child);
+          chr_v mutation = this->mutate(child);
           std::move(mutation.begin(), mutation.end(), std::back_inserter(off));
         }
 
@@ -77,8 +77,11 @@ namespace util::evolution {
 
     virtual evo_t* copy (void) const { return new gen_t(*this); }
 
-    void set_mutator (mutator const& mutate) { this->_mutate = mutate; }
     void set_crossover (crossover const& cross) { this->_cross = cross; }
+    void set_mutator (mutator const& mutate) { this->_mutate = mutate; }
+
+    chr_v cross (void) { return this->_cross(*this); }
+    chr_v mutate (chr_t const& chr) { return this->_mutate(*this, chr); }
 
     siz_t popsize (void) const { return this->_popsize; }
 

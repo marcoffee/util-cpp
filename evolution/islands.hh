@@ -156,8 +156,30 @@ namespace util::evolution {
 
     siz_t size (void) const { return this->_size; }
 
-    evo_t& world (siz_t i) { return *this->_world[i]; }
-    evo_t const& world (siz_t i) const { return *this->_world[i]; }
+    template <
+      typename EVO = evo_t,
+      typename = std::enable_if_t<std::is_base_of_v<evo_t, EVO>>,
+      typename = std::enable_if_t<!std::is_const_v<EVO>>
+    >
+    EVO& world (siz_t i) {
+      if constexpr (std::is_same_v<EVO, evo_t>) {
+        return *this->_world[i];
+      }
+
+      return *dynamic_cast<EVO*>(this->_world[i]);
+    }
+
+    template <
+      typename EVO = evo_t,
+      typename = std::enable_if_t<std::is_base_of_v<evo_t, EVO>>
+    >
+    EVO const& world (siz_t i) const {
+      if constexpr (std::is_same_v<EVO, evo_t>) {
+        return *this->_world[i];
+      }
+
+      return *dynamic_cast<EVO const*>(this->_world[i]);
+    }
 
     evo_t& operator [] (siz_t i) { return this->world(i); }
     evo_t const& operator [] (siz_t i) const { return this->world(i); }

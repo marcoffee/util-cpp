@@ -6,6 +6,9 @@
 #include "../util_constexpr.hh"
 #include "../iterator.hh"
 
+#define __EVO_TMPL_FUNC_ARGS \
+typename T, typename F, typename RND
+
 #define __EVO_TMPL_HEAD_ARGS \
 typename T, typename F = double, typename RND = std::mt19937
 
@@ -249,7 +252,7 @@ namespace util::evolution {
     chr_t create (void) { return this->_create(*this); }
     fit_t evaluate (chr_t const& chr) { return this->_evaluate(*this, chr); }
 
-    void populate (siz_t size = std::numeric_limits<siz_t>::max()) {
+    void populate (siz_t size) {
       siz_t const old = this->size();
       siz_t const pop = std::min(size, this->max_size());
 
@@ -284,18 +287,22 @@ namespace util::evolution {
       );
     }
 
-    siz_t tournament (siz_t t_size, siz_t dim = 0) {
-      siz_t *idx = new siz_t[this->size()];
+    siz_t tournament (siz_t t_size, fit_t* fit, siz_t size, siz_t dim = 0) {
+      siz_t *idx = new siz_t[size];
 
-      std::iota(idx, idx + this->size(), 0);
-      std::shuffle(idx, idx + this->size(), this->_rnd);
+      std::iota(idx, idx + size, 0);
+      std::shuffle(idx, idx + size, this->_rnd);
 
       siz_t const choice = *std::min_element(
-        idx, idx + t_size, this->build_compare(this->_fit, dim)
+        idx, idx + t_size, this->build_compare(fit, dim)
       );
 
       delete[] idx;
       return choice;
+    }
+
+    siz_t tournament (siz_t t_size, siz_t dim = 0) {
+      return this->tournament(t_size, this->_fit, this->size(), dim);
     }
 
     void step (void) {

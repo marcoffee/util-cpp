@@ -8,7 +8,7 @@ namespace util::evolution {
   class one_lambda : public __BASE_CLASS {
   public:
     __EVO_USING_TYPES;
-    using onl_t       = one_lambda;
+    using gen_t       = one_lambda;
 
     __EVO_USING_FUNCTIONS;
     using mutator     = std::function<chr_v(evo_t&, chr_t const& chr)>;

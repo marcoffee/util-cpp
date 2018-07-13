@@ -46,7 +46,7 @@ __EVO_CLASS(base)
   using generator  = std::function<chr_v(evo_t&)>; \
   using evaluator  = std::function<fit_t(evo_t&, chr_t const&)>; \
   using comparator = std::function<bool(evo_t&, fit_t const&, fit_t const&)>; \
-  using subtractor = function_ret_rebind<comparator, double>; \
+  using subtractor = std::function<dis_t(evo_t&, fit_t const&, fit_t const&)>; \
   \
   using simple_creator    = std::function<chr_t()>; \
   using simple_generator  = std::function<chr_v()>; \

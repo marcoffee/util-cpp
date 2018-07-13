@@ -5,49 +5,7 @@
 #include <functional>
 #include "../util_constexpr.hh"
 #include "../iterator.hh"
-
-#define __EVO_TMPL_FUNC_ARGS \
-typename T, typename F, typename RND
-
-#define __EVO_TMPL_HEAD_ARGS \
-typename T, typename F = double, typename RND = std::mt19937
-
-#define __EVO_TMPL_HEAD \
-template <__EVO_TMPL_HEAD_ARGS>
-
-#define __EVO_CLASS(cls) \
-cls<T, F, RND>
-
-#define __BASE_CLASS \
-__EVO_CLASS(base)
-
-#define __EVO_USING_TYPES \
-  using evo_t = __BASE_CLASS; \
-  using chr_t = T; \
-  using fit_t = F; \
-  using siz_t = uintmax_t; \
-  using rnd_t = RND; \
-  using sed_t = typename rnd_t::result_type; \
-  using chr_v = std::vector<chr_t>; \
-  using fit_v = std::vector<fit_t>; \
-  using siz_v = std::vector<siz_t>; \
-  using const_chr_iterator = chr_t const*; \
-  using const_fit_iterator = fit_t const*; \
-  \
-  using step_event = std::function<void(evo_t&)>
-
-#define __EVO_USING_FUNCTIONS \
-  using creator    = std::function<chr_t(evo_t&)>; \
-  using evaluator  = std::function<fit_t(evo_t&, chr_t const&)>; \
-  using comparator = std::function<bool(evo_t&, fit_t const&, fit_t const&)>; \
-  using subtractor = function_ret_rebind<comparator, double>; \
-  \
-  using simple_creator    = std::function<chr_t()>; \
-  using simple_evaluator  = std::function<fit_t(chr_t const&)>; \
-  using simple_comparator = std::function<bool(fit_t const&, fit_t const&)>; \
-  using simple_subtractor = function_ret_rebind<simple_comparator, double>; \
-  \
-  using index_comparator  = std::function<bool(siz_t, siz_t)>
+#include "macros.hh"
 
 namespace util::evolution {
 
@@ -68,8 +26,10 @@ namespace util::evolution {
     bool* _best_set = nullptr;
 
     comparator* _compare = nullptr;
+    subtractor* _subtract = nullptr;
 
     creator _create = nullptr;
+    generator _generate = nullptr;
     evaluator _evaluate = nullptr;
 
     step_event _before_step = noop<step_event>;
@@ -84,6 +44,7 @@ namespace util::evolution {
       this->_best = new siz_t[this->dimensions()]();
       this->_best_set = new bool[this->dimensions()]();
       this->_compare = new comparator[this->dimensions()]();
+      this->_subtract = new subtractor[this->dimensions()]();
     }
 
     virtual void release (bool) {
@@ -93,6 +54,7 @@ namespace util::evolution {
       this->_best = nullptr;
       this->_best_set = nullptr;
       this->_compare = nullptr;
+      this->_subtract = nullptr;
     }
 
     virtual void free (bool) {
@@ -102,6 +64,7 @@ namespace util::evolution {
       delete[] this->_best;
       delete[] this->_best_set;
       delete[] this->_compare;
+      delete[] this->_subtract;
 
       this->evo_t::release(false);
     }
@@ -127,10 +90,12 @@ namespace util::evolution {
       std::copy(evo._best, evo._best + evo._dimensions, this->_best);
       std::copy(evo._best_set, evo._best_set + evo._dimensions, this->_best_set);
       std::copy(evo._compare, evo._compare + evo._dimensions, this->_compare);
+      std::copy(evo._subtract, evo._subtract + evo._dimensions, this->_subtract);
 
       this->_rnd = evo._rnd;
 
       this->_create = evo._create;
+      this->_generate = evo._generate;
       this->_evaluate = evo._evaluate;
 
       return *this;
@@ -146,10 +111,12 @@ namespace util::evolution {
       this->_best = std::move(evo._best);
       this->_best_set = std::move(evo._best_set);
       this->_compare = std::move(evo._compare);
+      this->_subtract = std::move(evo._subtract);
 
       this->_rnd = std::move(evo._rnd);
 
       this->_create = std::move(evo._create);
+      this->_generate = std::move(evo._generate);
       this->_evaluate = std::move(evo._evaluate);
 
       evo.release(false);
@@ -187,8 +154,32 @@ namespace util::evolution {
       return this->_best[dim];
     }
 
-    virtual siz_t initialize (chr_t* chr, fit_t* fit, siz_t space) = 0;
-    virtual siz_t evolve (chr_t* chr, fit_t* fit, siz_t space) = 0;
+    virtual siz_t initialize (chr_t* chr, fit_t* fit, siz_t space) {
+      for (siz_t i = 0; i < space; ++i) {
+        chr[i] = this->create();
+        fit[i] = this->evaluate(chr[i]);
+      }
+
+      return space;
+    }
+
+    virtual siz_t evolve (chr_t* chr, fit_t* fit, siz_t space) {
+      std::uniform_real_distribution<double> dist;
+
+      for (siz_t i = 0; i < space; ) {
+        for (chr_t& child : this->generate()) {
+          chr[i] = std::move(child);
+          fit[i] = this->evaluate(chr[i]);
+
+          if (++i >= space) {
+            break;
+          }
+        }
+      }
+
+      return space;
+    }
+
     virtual siz_t select (chr_t* chr, fit_t* fit, siz_t old, siz_t all) = 0;
 
     siz_t evolve (siz_t space, siz_t old) {
@@ -223,7 +214,12 @@ namespace util::evolution {
       this->_compare[dim] = cmp;
     }
 
+    void set_subtractor (subtractor const& sub, siz_t dim = 0) {
+      this->_subtract[dim] = sub;
+    }
+
     void set_creator (creator const& crt) { this->_create = crt; }
+    void set_generator (generator const& gen) { this->_generate = gen; }
     void set_evaluator (evaluator const& evl) { this->_evaluate = evl; }
 
     void set_comparator (simple_comparator const& cmp, siz_t dim = 0) {
@@ -232,8 +228,18 @@ namespace util::evolution {
       }, dim);
     }
 
+    void set_subtractor (simple_subtractor const& sub, siz_t dim = 0) {
+      this->set_subtractor([ sub ] (evo_t&, fit_t const& f1, fit_t const& f2) {
+        return sub(f1, f2);
+      }, dim);
+    }
+
     void set_creator (simple_creator const& crt) {
       this->set_creator([ crt ] (evo_t&) { return crt(); });
+    }
+
+    void set_generator (simple_generator const& gen) {
+      this->set_generator([ gen ] (evo_t&) { return gen();});
     }
 
     void set_evaluator (simple_evaluator const& evl) {
@@ -249,7 +255,12 @@ namespace util::evolution {
       return this->_compare[dim](*this, fa, fb);
     }
 
+    double subtract (fit_t const& fa, fit_t const& fb, siz_t dim = 0) {
+      return this->_subtract[dim](*this, fa, fb);
+    }
+
     chr_t create (void) { return this->_create(*this); }
+    chr_t generate (void) { return this->_generate(*this); }
     fit_t evaluate (chr_t const& chr) { return this->_evaluate(*this, chr); }
 
     void populate (siz_t size) {
@@ -272,19 +283,23 @@ namespace util::evolution {
     }
 
     void partition_best (chr_t* chr, fit_t* fit, siz_t size, siz_t nth, siz_t dim = 0) {
-      util::iterator::multipartition(
-        this->build_compare(dim), fit, fit + size, nth, chr, fit
-      );
+      if (nth > 0 && nth < size) {
+        util::iterator::multipartition(
+          this->build_compare(dim), fit, fit + size, nth, chr, fit
+        );
+      }
     }
 
     void partition_worst (chr_t* chr, fit_t* fit, siz_t size, siz_t nth, siz_t dim = 0) {
-      util::iterator::multipartition(
-        std::not_fn(this->build_compare(dim)),
-        std::make_reverse_iterator(fit + size),
-        std::make_reverse_iterator(fit), nth,
-        std::make_reverse_iterator(chr + size),
-        std::make_reverse_iterator(fit + size)
-      );
+      if (nth > 0 && nth < size) {
+        util::iterator::multipartition(
+          std::not_fn(this->build_compare(dim)),
+          std::make_reverse_iterator(fit + size),
+          std::make_reverse_iterator(fit), nth,
+          std::make_reverse_iterator(chr + size),
+          std::make_reverse_iterator(fit + size)
+        );
+      }
     }
 
     siz_t tournament (siz_t t_size, fit_t* fit, siz_t size, siz_t dim = 0) {
@@ -418,7 +433,7 @@ namespace util::evolution {
       this->set(pos, chr_v(chrs));
     }
 
-    inline siz_t best (siz_t dimension) { return this->update_best(dimension); }
+    virtual siz_t best (siz_t dim = 0) { return this->update_best(dim); }
 
     inline rnd_t& random (void) { return this->_rnd; }
     inline rnd_t const& random (void) const { return this->_rnd; }
@@ -426,8 +441,13 @@ namespace util::evolution {
     inline chr_t const& chr_at (siz_t pos) const { return this->_chr[pos]; }
     inline fit_t const& fit_at (siz_t pos) const { return this->_fit[pos]; }
 
-    inline chr_t const& best_chr (siz_t dimension = 0) { return this->chr_at(this->best(dimension)); };
-    inline fit_t const& best_fit (siz_t dimension = 0) { return this->fit_at(this->best(dimension)); };
+    inline chr_t const& best_chr (siz_t dim = 0) {
+      return this->chr_at(this->best(dim));
+    }
+
+    inline fit_t const& best_fit (siz_t dim = 0) {
+      return this->fit_at(this->best(dim));
+    }
 
     inline siz_t size (void) const { return this->_size; }
     inline siz_t max_size (void) const { return this->_max_size; }

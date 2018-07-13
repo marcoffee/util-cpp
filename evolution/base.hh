@@ -260,7 +260,7 @@ namespace util::evolution {
     }
 
     chr_t create (void) { return this->_create(*this); }
-    chr_t generate (void) { return this->_generate(*this); }
+    chr_v generate (void) { return this->_generate(*this); }
     fit_t evaluate (chr_t const& chr) { return this->_evaluate(*this, chr); }
 
     void populate (siz_t size) {

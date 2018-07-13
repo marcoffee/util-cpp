@@ -8,39 +8,23 @@ namespace util::evolution {
   class one_lambda : public __BASE_CLASS {
   public:
     __EVO_USING_TYPES;
-    using gen_t       = one_lambda;
-
     __EVO_USING_FUNCTIONS;
-    using mutator     = std::function<chr_v(evo_t&, chr_t const& chr)>;
+    __EVO_USING_GENERATOR;
+
+    using gen_t = one_lambda;
 
   private:
-    mutator _mutate = nullptr;
     uintmax_t _lambda;
     bool _drift = true;
     bool _changed = false;
 
     siz_t initialize (chr_t* chr, fit_t* fit, siz_t) override {
-      chr[0] = this->create();
-      fit[0] = this->evaluate(chr[0]);
       this->_changed = true;
-      return 1;
+      return this->evo_t::initialize(chr, fit, 1);
     }
 
     siz_t evolve (chr_t* chr, fit_t* fit, siz_t) override {
-      chr_t const& best = this->chr_at(0);
-
-      for (siz_t i = 0; i < this->lambda(); ) {
-        for (chr_t& child : this->mutate(best)) {
-          fit[i] = this->evaluate(child);
-          chr[i] = std::move(child);
-
-          if (++i >= this->lambda()) {
-            break;
-          }
-        }
-      }
-
-      return this->lambda();
+      return this->evo_t::evolve(chr, fit, this->lambda());
     }
 
     siz_t select (chr_t* chr, fit_t* fit, siz_t, siz_t) override {
@@ -66,9 +50,11 @@ namespace util::evolution {
       : evo_t(1 + lambda, seed), _lambda(lambda) {};
 
     evo_t* copy (void) const override { return new one_lambda(*this); }
+    siz_t best (siz_t = 0) override { return 0; }
 
-    void set_mutator (mutator const& mutate) { this->_mutate = mutate; }
-    chr_v mutate (chr_t const& chr) { return this->_mutate(*this, chr); }
+    void set_mutator (single_mutator const& mutate) {
+      this->set_generator(gnr_t::mutate_only(mutate));
+    }
 
     uintmax_t& lambda (void) { return this->_lambda; }
     uintmax_t const& lambda (void) const { return this->_lambda; }

@@ -68,6 +68,15 @@ std::string f_to_string (
     return out.str();
 }
 
+template <typename T>
+std::string i_to_string (
+  T const val, uintmax_t width = 0, char fill = ' '
+) {
+    std::ostringstream out;
+    out << std::setfill(fill) << std::setw(width) << val;
+    return out.str();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 constexpr std::string_view ltrim (

@@ -5,6 +5,10 @@
 #include <type_traits>
 #include "util_macro.hh"
 
+namespace util {
+  constexpr double PI = 3.141592653589793238463;
+};
+
 template <uintmax_t N>
 struct static_log2 {
   constexpr static uintmax_t value = static_log2<(N >> 1)>::value + 1;

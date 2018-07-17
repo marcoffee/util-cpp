@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../base.hh"
+#include "../generators.hh"
 
 namespace util::evolution {
 
@@ -9,15 +10,87 @@ namespace util::evolution {
 
   public:
     __EVO_USING_TYPES;
-    using gen_t = nsga;
-
     __EVO_USING_FUNCTIONS;
+    __EVO_USING_GENERATOR;
+
+    using gen_t = nsga;
 
   protected:
     siz_t _popsize;
     siz_t _children;
     siz_t *_fro;
     dis_t *_dis;
+
+    void alloc (bool parent) override {
+      if (parent) {
+        this->evo_t::alloc(true);
+      }
+
+      this->_fro = new siz_t[this->max_size()];
+      this->_dis = new dis_t[this->max_size()];
+    }
+
+    void release (bool parent) override {
+      if (parent) {
+        this->evo_t::release(true);
+      }
+
+      this->_fro = nullptr;
+      this->_dis = nullptr;
+    }
+
+    void free (bool parent) override {
+      if (parent) {
+        this->evo_t::free(true);
+      }
+
+      delete[] this->_fro;
+      delete[] this->_dis;
+      this->release(false);
+    }
+
+    void copy_meta (nsga const& ot, bool parent) {
+      if (parent) {
+        this->evo_t::copy_meta(ot, true);
+      }
+
+      this->_popsize = ot._popsize;
+      this->_children = ot._children;
+    }
+
+    nsga& copy_from (nsga const& ot, bool parent) {
+      bool const dif = this->max_size() != ot.max_size();
+
+      if (parent) {
+        this->evo_t::copy_from(ot, true);
+      }
+
+      if (dif) {
+        this->free(false);
+        this->copy_meta(ot, false);
+        this->alloc(false);
+      }
+
+      std::copy(ot._fro, ot._fro + ot.max_size(), this->_fro);
+      std::copy(ot._dis, ot._dis + ot.max_size(), this->_dis);
+
+      return *this;
+    }
+
+    nsga& move_from (nsga& ot, bool parent) {
+      if (parent) {
+        this->evo_t::move_from(ot, true);
+      }
+
+      this->free(false);
+      this->copy_meta(ot, false);
+
+      this->_fro = std::move(ot._fro);
+      this->_dis = std::move(ot._dis);
+      ot.release(true);
+
+      return *this;
+    }
 
     bool dominates (fit_t const& fa, fit_t const& fb, bool& a_d, bool& b_d) {
       bool a_dom = false;
@@ -66,11 +139,9 @@ namespace util::evolution {
           if (this->dominates(fit[i], fit[j], i_d, j_d)) {
             if (i_d) {
               dominated[i].emplace_back(j);
-              // std::cout << i << " dominates " << j << std::endl;
               count[j]++;
             } else {
               dominated[j].emplace_back(i);
-              // std::cout << j << " dominates " << i << std::endl;
               count[i]++;
             }
           }
@@ -165,13 +236,11 @@ namespace util::evolution {
 
       siz_t const fronts = this->nd_sorting(fit, this->_fro, ranked, ends, all, this->popsize());
       siz_t const found = ends[fronts - 1];
-      siz_t start = 0;
 
       std::fill(this->_dis, this->_dis + found, -std::numeric_limits<dis_t>::infinity());
 
-      for (siz_t i = 0; i < fronts; ++i) {
+      for (siz_t i = 0, start = 0; i < fronts; start = ends[i], ++i) {
         this->cd_sorting(fit, this->_dis, ranked + start, ends[i] - start);
-        start = ends[i];
       }
 
       if (found > this->popsize()) {
@@ -187,7 +256,7 @@ namespace util::evolution {
       }
 
       util::iterator::multiorder(
-        ranked, ranked + this->popsize(), 0, chr, fit, this->_dis, this->_fro
+        ranked, ranked + all, this->popsize(), chr, fit, this->_dis, this->_fro
       );
 
       delete[] ends;
@@ -195,19 +264,32 @@ namespace util::evolution {
       return this->popsize();
     }
 
+    void on_before_user_change (void) override {
+      throw std::runtime_error("Cannot update population on NSGA.");
+    }
+
   public:
 
     nsga (siz_t popsize, siz_t children, siz_t dimensions, siz_t seed)
       : evo_t(dimensions, popsize + children, seed),
-        _popsize(popsize), _children(children) {}
+        _popsize(popsize), _children(children) { this->alloc(false); }
 
     nsga (siz_t popsize, siz_t dimensions, siz_t seed)
       : nsga(popsize, popsize, dimensions, seed) {}
 
+    nsga (nsga const& ot) : __BASE_CLASS(ot) { this->copy_from(ot, false); }
+    nsga (nsga&& ot) : __BASE_CLASS(std::move(ot)) { this->move_from(ot, false); }
+
+    nsga& operator = (nsga const& ot) { return this->copy_from(ot, true); }
+    nsga& operator = (nsga&& ot) { return this->move_from(ot, true); }
+
     evo_t* copy (void) const override { return new nsga(*this); }
 
-    siz_t const& popsize (void) const { return this->_popsize; }
-    siz_t const& children (void) const { return this->_children; }
+    siz_t popsize (void) const { return this->_popsize; }
+    siz_t children (void) const { return this->_children; }
+
+    siz_t front_at (siz_t pos) const { return this->_fro[pos]; }
+    dis_t distance_at (siz_t pos) const { return this->_dis[pos]; }
 
     siz_t test_nd_sorting (
       fit_t const* fit, siz_t* ranks, siz_t* ranked, siz_t* ends,

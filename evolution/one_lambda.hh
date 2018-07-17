@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base.hh"
+#include "generators.hh"
 
 namespace util::evolution {
 
@@ -53,7 +54,7 @@ namespace util::evolution {
     siz_t best (siz_t = 0) override { return 0; }
 
     void set_mutator (single_mutator const& mutate) {
-      this->set_generator(gnr_t::mutate_only(mutate));
+      this->set_generator(generators::mutate_only(mutate));
     }
 
     uintmax_t& lambda (void) { return this->_lambda; }

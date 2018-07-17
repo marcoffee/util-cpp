@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base.hh"
+#include "generators.hh"
 
 namespace util::evolution {
 
@@ -8,9 +9,10 @@ namespace util::evolution {
   class genetic : public __BASE_CLASS {
   public:
     __EVO_USING_TYPES;
-    using gen_t       = genetic;
-
     __EVO_USING_FUNCTIONS;
+    __EVO_USING_GENERATOR;
+
+    using gen_t = genetic;
 
   protected:
     siz_t _popsize;

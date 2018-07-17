@@ -34,12 +34,14 @@ __EVO_CLASS(base)
   \
   using step_event = std::function<void(evo_t&)>
 
-#define __EVO_USING_GENERATOR \
-  using gnr_t = __EVO_CLASS(generators); \
-  \
+#define __EVO_USING_GENERATOR_FUNCTIONS \
   using single_mutator = std::function<chr_v(evo_t&, chr_t const& chr)>; \
   using crossover      = std::function<chr_v(evo_t&)>; \
   using mutator        = std::function<chr_v(evo_t&)>;
+
+#define __EVO_USING_GENERATOR \
+  using generators     = __EVO_CLASS(util::evolution::generators); \
+  __EVO_USING_GENERATOR_FUNCTIONS
 
 #define __EVO_USING_FUNCTIONS \
   using creator    = std::function<chr_t(evo_t&)>; \

@@ -9,14 +9,14 @@ namespace util::evolution {
   public:
     __EVO_USING_TYPES;
     __EVO_USING_FUNCTIONS;
-    __EVO_USING_GENERATOR;
+    __EVO_USING_GENERATOR_FUNCTIONS;
 
     static generator always_cross (
       crossover const& cross, single_mutator const& mutate, double m_prob
     ) {
       std::uniform_real_distribution<double> dist;
 
-      return [ cross, mutate, m_prob, dist ] (evo_t& evo) -> chr_v {
+      return [ cross, mutate, m_prob, &dist ] (evo_t& evo) -> chr_v {
         chr_v off;
 
         for (chr_t& child : cross(evo)) {
@@ -38,7 +38,7 @@ namespace util::evolution {
     ) {
       std::uniform_real_distribution<double> dist;
 
-      return [ cross, mutate, m_prob, dist ] (evo_t& evo) -> chr_v {
+      return [ cross, mutate, m_prob, &dist ] (evo_t& evo) -> chr_v {
         if (dist(evo.random()) > m_prob) {
           return cross(evo);
         }

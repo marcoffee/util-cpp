@@ -154,6 +154,10 @@ namespace util::evolution {
       return this->_best[dim];
     }
 
+    void reset_best (void) {
+      std::fill(this->_best_set, this->_best_set + this->dimensions(), false);
+    }
+
     virtual siz_t initialize (chr_t* chr, fit_t* fit, siz_t space) {
       for (siz_t i = 0; i < space; ++i) {
         chr[i] = this->create();
@@ -182,6 +186,12 @@ namespace util::evolution {
 
     virtual siz_t select (chr_t* chr, fit_t* fit, siz_t old, siz_t all) = 0;
 
+    virtual void on_before_user_change (void) {}
+
+    virtual void on_after_user_change (void) {
+      this->reset_best();
+    }
+
     siz_t evolve (siz_t space, siz_t old) {
       return this->evolve(this->_chr + old, this->_fit + old, space);
     }
@@ -199,14 +209,14 @@ namespace util::evolution {
 
     base (siz_t max_size, sed_t seed) : base(1, max_size, seed) {}
 
-    base (base const& evo) { this->copy_from(evo, false); }
-    base (base&& evo) { this->move_from(evo, false); };
+    base (base const& evo) { this->copy_from(evo, true); }
+    base (base&& evo) { this->move_from(evo, true); };
 
-    base& operator = (base const& evo) { return this->copy_from(evo, false); }
-    base& operator = (base&& evo) { return this->move_from(evo, false); }
+    base& operator = (base const& evo) { return this->copy_from(evo, true); }
+    base& operator = (base&& evo) { return this->move_from(evo, true); }
 
     virtual ~base (void) { this->destroy(); };
-    void destroy (void) { this->free(false); }
+    void destroy (void) { this->free(true); }
 
     virtual evo_t* copy (void) const = 0;
 
@@ -273,7 +283,7 @@ namespace util::evolution {
         std::destroy(this->_chr + this->size(), this->_chr + old);
       }
 
-      std::fill(this->_best_set, this->_best_set + this->dimensions(), false);
+      this->reset_best();
     }
 
     void sort (chr_t* chr, fit_t* fit, siz_t size, siz_t dim = 0) {
@@ -327,7 +337,7 @@ namespace util::evolution {
       siz_t const space = this->max_size() - this->size();
 
       this->_size = this->select(old, old + this->evolve(space, old));
-      std::fill(this->_best_set, this->_best_set + this->dimensions(), false);
+      this->reset_best();
 
       if (this->size() < old) {
         std::destroy(this->_chr + this->size(), this->_chr + old);
@@ -338,17 +348,21 @@ namespace util::evolution {
     }
 
     inline void swap (siz_t pos, chr_t& chr, fit_t& fit) {
+      this->on_before_user_change();
       std::swap(this->_chr[pos], chr);
       std::swap(this->_fit[pos], fit);
-      std::fill(this->_best_set, this->_best_set + this->dimensions(), false);
+      this->on_after_user_change();
     }
 
     inline void swap (evo_t& evo, siz_t pos, siz_t evo_p) {
+      evo.on_before_user_change();
       this->swap(pos, evo._chr[evo_p], evo._fit[evo_p]);
-      std::fill(evo._best_set, evo._best_set + evo.dimensions(), false);
+      evo.on_after_user_change();
     }
 
     inline void remove (siz_t pos, chr_t& chr = defref<chr_t>, fit_t& fit = defref<fit_t>) {
+      this->on_before_user_change();
+
       siz_t const last = this->size() - 1;
 
       std::swap(this->_chr[pos], this->_chr[last]);
@@ -358,20 +372,23 @@ namespace util::evolution {
       fit = std::move(this->_fit[last]);
 
       this->_size -= 1;
-      std::fill(this->_best_set, this->_best_set + this->dimensions(), false);
 
       std::destroy_at(this->_chr + last);
       std::destroy_at(this->_fit + last);
+
+      this->on_after_user_change();
     }
 
     inline siz_t add (chr_t&& chr, fit_t&& fit) {
+      this->on_before_user_change();
+
       siz_t const last = this->size();
 
       this->_chr[last] = std::move(chr);
       this->_fit[last] = std::move(fit);
 
       this->_size += 1;
-      std::fill(this->_best_set, this->_best_set + this->dimensions(), false);
+      this->on_after_user_change();
 
       return last;
     }
@@ -390,9 +407,10 @@ namespace util::evolution {
     }
 
     inline void set (siz_t pos, chr_t&& chr, fit_t&& fit) {
+      this->on_before_user_change();
       this->_chr[pos] = std::move(chr);
       this->_fit[pos] = std::move(fit);
-      std::fill(this->_best_set, this->_best_set + this->dimensions(), false);
+      this->on_after_user_change();
     }
 
     inline void set (siz_t pos, chr_t const& chr, fit_t const& fit) {
@@ -409,9 +427,10 @@ namespace util::evolution {
     }
 
     inline void set (siz_t pos, chr_v&& chrs, fit_v&& fits) {
+      this->on_before_user_change();
       std::move(chrs.begin(), chrs.end(), this->_chr + pos);
       std::move(fits.begin(), fits.end(), this->_fit + pos);
-      std::fill(this->_best_set, this->_best_set + this->dimensions(), false);
+      this->on_after_user_change();
     }
 
     inline void set (siz_t pos, chr_v const& chrs, fit_v const& fits) {

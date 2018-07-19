@@ -306,7 +306,9 @@ namespace util::evolution {
     }
 
     index_comparator make_index_comparator (siz_t dim = 0) {
-      return this->make_index_comparator(this->_fit, dim);
+      return [ this, dim ] (siz_t const& a, siz_t const& b) -> bool {
+        return this->compare(this->fit_at(a), this->fit_at(b), dim);
+      };
     }
 
     bool compare (fit_t const& fa, fit_t const& fb, siz_t dim = 0) {

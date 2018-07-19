@@ -317,6 +317,12 @@ namespace util::evolution {
       };
     }
 
+    index_comparator make_crowding_comparator (void) const {
+      return [ this ] (siz_t const& a, siz_t const& b) {
+        return this->distance_at(a) > this->distance_at(b);
+      };
+    }
+
     index_comparator make_crowded_comparator (
       siz_t const* fro, dis_t const* dis
     ) const {
@@ -325,12 +331,13 @@ namespace util::evolution {
       };
     }
 
-    index_comparator make_crowding_comparator (void) const {
-      return this->make_crowding_comparator(this->_dis);
-    }
-
     index_comparator make_crowded_comparator (void) const {
-      return this->make_crowded_comparator(this->_fro, this->_dis);
+      return [ this ] (siz_t const& a, siz_t const& b) {
+        return this->front_at(a) < this->front_at(b) || (
+          this->front_at(a) == this->front_at(b) &&
+          this->distance_at(a) > this->distance_at(b)
+        );
+      };
     }
 
   };

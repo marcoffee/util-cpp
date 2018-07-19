@@ -2,7 +2,7 @@ CXX        := g++
 CXXFLAGS   :=
 MACROS     :=
 INC        :=
-LIBS       := -fopenmp -lpthread -lm -lgmp -lmpfr -pthread
+LIBS       := -fopenmp -lpthread -lm -lgmp -lgmpxx -lstdc++fs -lmpfr -pthread
 
 DEFFLAGS   := -g -std=c++17 -Wall -fdiagnostics-color=always $(LIBS) $(MACROS) $(INC)
 

@@ -249,11 +249,7 @@ namespace util::evolution {
         siz_t const conti = (fronts < 2) ? 0 : ends[fronts - 2];
         siz_t const rem = this->popsize() - conti;
 
-        std::function<bool(siz_t, siz_t)> const cmp{
-          [ dis = this->_dis ] (siz_t a, siz_t b) { return dis[a] > dis[b]; }
-        };
-
-        util::iterator::multipartition(cmp,
+        util::iterator::multipartition(this->make_crowding_comparator(),
           ranked + conti, ranked + found, rem, ranked + conti
         );
       }
@@ -269,20 +265,17 @@ namespace util::evolution {
         std::filesystem::create_directories(saveto);
       }
 
-      if (true || generation == 83 || generation == 84) {
+      std::ofstream file(saveto / std::to_string(generation));
 
-        std::ofstream file(saveto / std::to_string(generation));
-
-        for (siz_t i = 0; i < this->popsize(); ++i) {
-          file << fit[i] << " , 1 , " << this->_fro[i] << " , " << f_to_string(this->_dis[i]) << std::endl;
-        }
-
-        for (siz_t i = this->popsize(); i < all; ++i) {
-          file << fit[i] << " , 0" << std::endl;
-        }
-
-        file.close();
+      for (siz_t i = 0; i < this->popsize(); ++i) {
+        file << fit[i] << " , 1 , " << this->_fro[i] << " , " << f_to_string(this->_dis[i]) << std::endl;
       }
+
+      for (siz_t i = this->popsize(); i < all; ++i) {
+        file << fit[i] << " , 0" << std::endl;
+      }
+
+      file.close();
 
       generation++;
 
@@ -318,12 +311,22 @@ namespace util::evolution {
     siz_t front_at (siz_t pos) const { return this->_fro[pos]; }
     dis_t distance_at (siz_t pos) const { return this->_dis[pos]; }
 
+    index_comparator make_crowding_comparator (dis_t const* dis) const {
+      return [ dis ] (siz_t const& a, siz_t const& b) {
+        return dis[a] > dis[b];
+      };
+    }
+
     index_comparator make_crowded_comparator (
       siz_t const* fro, dis_t const* dis
     ) const {
       return [ fro, dis ] (siz_t const& a, siz_t const& b) {
         return fro[a] < fro[b] || (fro[a] == fro[b] && dis[a] > dis[b]);
       };
+    }
+
+    index_comparator make_crowding_comparator (void) const {
+      return this->make_crowding_comparator(this->_dis);
     }
 
     index_comparator make_crowded_comparator (void) const {

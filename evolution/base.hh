@@ -15,6 +15,53 @@ namespace util::evolution {
     __EVO_USING_TYPES;
     __EVO_USING_FUNCTIONS;
 
+    static siz_t tournament (
+      evo_t& evo, siz_t size, siz_t t_size, index_comparator const& cmp
+    ) {
+      using dist_t = std::uniform_int_distribution<siz_t>;
+      using dist_p = dist_t::param_type;
+
+      dist_t dist;
+      siz_t *idx = new siz_t[size];
+
+      std::iota(idx, idx + size, 0);
+
+      for (siz_t i = 0; i < t_size; ++i) {
+        std::swap(idx[i], idx[dist(evo.random(), dist_p(i, size - 1))]);
+      }
+
+      siz_t const choice = *std::min_element(idx, idx + t_size, cmp);
+
+      delete[] idx;
+      return choice;
+    }
+
+    static siz_t roulette (
+      evo_t& evo, siz_t size, index_comparator const& cmp
+    ) {
+      std::uniform_int_distribution<siz_t> dist(0, (size * (size - 1)) >> 1);
+      siz_t choice = size;
+      siz_t accum = dist(evo.random());
+      siz_t *idx = new siz_t[size];
+
+      std::iota(idx, idx + size, 0);
+      std::stable_sort(idx, idx + size, cmp);
+
+      for (siz_t i = 0; i < size; ++i) {
+        siz_t const val = size - i;
+
+        if (val >= accum) {
+          choice = idx[i];
+          break;
+        }
+
+        accum -= val;
+      }
+
+      delete[] idx;
+      return choice;
+    }
+
   private:
     rnd_t _rnd;
     siz_t _dimensions = 0, _max_size = 0, _size = 0;
@@ -123,31 +170,16 @@ namespace util::evolution {
       return *this;
     }
 
-    simple_comparator build_compare (siz_t dim = 0) {
-      return [ this, dim ] (fit_t const& a, fit_t const& b) -> bool {
-        return this->compare(a, b, dim);
-      };
-    }
-
-    index_comparator build_compare (fit_t const* fit, siz_t dim = 0) {
-      return [ this, fit, dim ] (siz_t a, siz_t b) -> bool {
-        return this->compare(fit[a], fit[b], dim);
-      };
-    }
-
     siz_t find_best (fit_t const* fit, siz_t size, siz_t dim = 0) {
       return this->_compare[dim] ? *std::min_element(
         util::iterator::range<siz_t>(0), util::iterator::range<siz_t>(size),
-        this->build_compare(fit, dim)
+        this->make_index_comparator(fit, dim)
       ) : 0;
     }
 
     siz_t update_best (siz_t dim = 0) {
       if (!this->_best_set[dim]) {
-        this->_best[dim] = this->find_best(
-          this->_fit, this->size(), dim
-        );
-
+        this->_best[dim] = this->find_best(this->_fit, this->size(), dim);
         this->_best_set[dim] = true;
       }
 
@@ -261,6 +293,22 @@ namespace util::evolution {
     void on_before_step (step_event const& func) { this->_before_step = func; }
     void on_after_step (step_event const& func) { this->_after_step = func; }
 
+    simple_comparator make_simple_comparator (siz_t dim = 0) {
+      return [ this, dim ] (fit_t const& a, fit_t const& b) -> bool {
+        return this->compare(a, b, dim);
+      };
+    }
+
+    index_comparator make_index_comparator (fit_t const* fit, siz_t dim = 0) {
+      return [ this, fit, dim ] (siz_t const& a, siz_t const& b) -> bool {
+        return this->compare(fit[a], fit[b], dim);
+      };
+    }
+
+    index_comparator make_index_comparator (siz_t dim = 0) {
+      return this->make_index_comparator(this->_fit, dim);
+    }
+
     bool compare (fit_t const& fa, fit_t const& fb, siz_t dim = 0) {
       return this->_compare[dim](*this, fa, fb);
     }
@@ -288,14 +336,14 @@ namespace util::evolution {
 
     void sort (chr_t* chr, fit_t* fit, siz_t size, siz_t dim = 0) {
       util::iterator::multisort(
-        this->build_compare(dim), fit, fit + size, chr, fit
+        this->make_simple_comparator(dim), fit, fit + size, chr, fit
       );
     }
 
     void partition_best (chr_t* chr, fit_t* fit, siz_t size, siz_t nth, siz_t dim = 0) {
       if (nth > 0 && nth < size) {
         util::iterator::multipartition(
-          this->build_compare(dim), fit, fit + size, nth, chr, fit
+          this->make_simple_comparator(dim), fit, fit + size, nth, chr, fit
         );
       }
     }
@@ -303,7 +351,7 @@ namespace util::evolution {
     void partition_worst (chr_t* chr, fit_t* fit, siz_t size, siz_t nth, siz_t dim = 0) {
       if (nth > 0 && nth < size) {
         util::iterator::multipartition(
-          std::not_fn(this->build_compare(dim)),
+          std::not_fn(this->make_simple_comparator(dim)),
           std::make_reverse_iterator(fit + size),
           std::make_reverse_iterator(fit), nth,
           std::make_reverse_iterator(chr + size),
@@ -312,22 +360,20 @@ namespace util::evolution {
       }
     }
 
-    siz_t tournament (siz_t t_size, fit_t* fit, siz_t size, siz_t dim = 0) {
-      siz_t *idx = new siz_t[size];
+    siz_t tournament (siz_t t_size, index_comparator const& cmp) {
+      return evo_t::tournament(*this, this->size(), t_size, cmp);
+    }
 
-      std::iota(idx, idx + size, 0);
-      std::shuffle(idx, idx + size, this->_rnd);
-
-      siz_t const choice = *std::min_element(
-        idx, idx + t_size, this->build_compare(fit, dim)
-      );
-
-      delete[] idx;
-      return choice;
+    siz_t roulette (index_comparator const& cmp) {
+      return evo_t::roulette(*this, this->size(), cmp);
     }
 
     siz_t tournament (siz_t t_size, siz_t dim = 0) {
-      return this->tournament(t_size, this->_fit, this->size(), dim);
+      return this->tournament(t_size, this->make_index_comparator(dim));
+    }
+
+    siz_t roulette (siz_t dim = 0) {
+      return this->roulette(this->make_index_comparator(dim));
     }
 
     void step (void) {

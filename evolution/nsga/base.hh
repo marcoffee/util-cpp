@@ -1,5 +1,9 @@
 #pragma once
 
+#include <filesystem>
+#include <fstream>
+#include "../../string.hh"
+
 #include "../base.hh"
 #include "../generators.hh"
 
@@ -203,17 +207,17 @@ namespace util::evolution {
 
       for (siz_t i = 0; i < this->dimensions(); ++i) {
         std::copy(order, order + size, idx);
-        std::stable_sort(idx, idx + size, this->build_compare(fit, i));
+        std::stable_sort(idx, idx + size, this->make_index_comparator(fit, i));
 
         siz_t const id_a = idx[0], id_b = idx[last];
-        dis_t const delta = this->subtract(fit[id_a], fit[id_b], i);
+        dis_t const delta = 1.0 / this->subtract(fit[id_b], fit[id_a], i);
 
         distance[id_a] = std::numeric_limits<dis_t>::infinity();
         distance[id_b] = std::numeric_limits<dis_t>::infinity();
 
         for (siz_t j = 1; j < last; ++j) {
           distance[idx[j]] += delta * this->subtract(
-            fit[idx[j - 1]], fit[idx[j + 1]], i
+            fit[idx[j + 1]], fit[idx[j - 1]], i
           );
         }
 
@@ -237,17 +241,16 @@ namespace util::evolution {
       siz_t const fronts = this->nd_sorting(fit, this->_fro, ranked, ends, all, this->popsize());
       siz_t const found = ends[fronts - 1];
 
-      std::fill(this->_dis, this->_dis + found, -std::numeric_limits<dis_t>::infinity());
-
       for (siz_t i = 0, start = 0; i < fronts; start = ends[i], ++i) {
         this->cd_sorting(fit, this->_dis, ranked + start, ends[i] - start);
       }
 
       if (found > this->popsize()) {
-        siz_t const conti = ends[fronts - 2];
+        siz_t const conti = (fronts < 2) ? 0 : ends[fronts - 2];
         siz_t const rem = this->popsize() - conti;
+
         std::function<bool(siz_t, siz_t)> const cmp{
-          [ dis = this->_dis ] (siz_t a, siz_t b) { return dis[b] > dis[a]; }
+          [ dis = this->_dis ] (siz_t a, siz_t b) { return dis[a] > dis[b]; }
         };
 
         util::iterator::multipartition(cmp,
@@ -258,6 +261,30 @@ namespace util::evolution {
       util::iterator::multiorder(
         ranked, ranked + all, this->popsize(), chr, fit, this->_dis, this->_fro
       );
+
+      static siz_t generation = 0;
+      static std::filesystem::path const saveto("data/points");
+
+      if (generation == 0) {
+        std::filesystem::create_directories(saveto);
+      }
+
+      if (true || generation == 83 || generation == 84) {
+
+        std::ofstream file(saveto / std::to_string(generation));
+
+        for (siz_t i = 0; i < this->popsize(); ++i) {
+          file << fit[i] << " , 1 , " << this->_fro[i] << " , " << f_to_string(this->_dis[i]) << std::endl;
+        }
+
+        for (siz_t i = this->popsize(); i < all; ++i) {
+          file << fit[i] << " , 0" << std::endl;
+        }
+
+        file.close();
+      }
+
+      generation++;
 
       delete[] ends;
       delete[] ranked;
@@ -291,17 +318,16 @@ namespace util::evolution {
     siz_t front_at (siz_t pos) const { return this->_fro[pos]; }
     dis_t distance_at (siz_t pos) const { return this->_dis[pos]; }
 
-    siz_t test_nd_sorting (
-      fit_t const* fit, siz_t* ranks, siz_t* ranked, siz_t* ends,
-      siz_t size, siz_t fill
-    ) {
-      return this->nd_sorting(fit, ranks, ranked, ends, size, fill);
+    index_comparator make_crowded_comparator (
+      siz_t const* fro, dis_t const* dis
+    ) const {
+      return [ fro, dis ] (siz_t const& a, siz_t const& b) {
+        return fro[a] < fro[b] || (fro[a] == fro[b] && dis[a] > dis[b]);
+      };
     }
 
-    void test_cd_sorting (
-      fit_t const* fit, dis_t* distance, siz_t* order, siz_t size
-    ) {
-      return this->cd_sorting(fit, distance, order, size);
+    index_comparator make_crowded_comparator (void) const {
+      return this->make_crowded_comparator(this->_fro, this->_dis);
     }
 
   };

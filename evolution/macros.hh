@@ -56,4 +56,4 @@ __EVO_CLASS(base)
   using simple_comparator = std::function<bool(fit_t const&, fit_t const&)>; \
   using simple_subtractor = function_ret_rebind<simple_comparator, double>; \
   \
-  using index_comparator  = std::function<bool(siz_t, siz_t)>
+  using index_comparator  = std::function<bool(siz_t const&, siz_t const&)>

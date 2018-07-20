@@ -22,6 +22,7 @@ namespace util::evolution {
   protected:
     siz_t _popsize;
     siz_t _children;
+    siz_t _fronts;
     siz_t *_fro;
     dis_t *_dis;
 
@@ -60,6 +61,7 @@ namespace util::evolution {
 
       this->_popsize = ot._popsize;
       this->_children = ot._children;
+      this->_fronts = ot._fronts;
     }
 
     nsga& copy_from (nsga const& ot, bool parent) {
@@ -241,6 +243,8 @@ namespace util::evolution {
       siz_t const fronts = this->nd_sorting(fit, this->_fro, ranked, ends, all, this->popsize());
       siz_t const found = ends[fronts - 1];
 
+      this->_fronts = fronts;
+
       for (siz_t i = 0, start = 0; i < fronts; start = ends[i], ++i) {
         this->cd_sorting(fit, this->_dis, ranked + start, ends[i] - start);
       }
@@ -307,6 +311,7 @@ namespace util::evolution {
 
     siz_t popsize (void) const { return this->_popsize; }
     siz_t children (void) const { return this->_children; }
+    siz_t fronts (void) const { return this->_fronts; }
 
     siz_t front_at (siz_t pos) const { return this->_fro[pos]; }
     dis_t distance_at (siz_t pos) const { return this->_dis[pos]; }

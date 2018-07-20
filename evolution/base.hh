@@ -219,10 +219,7 @@ namespace util::evolution {
     virtual siz_t select (chr_t* chr, fit_t* fit, siz_t old, siz_t all) = 0;
 
     virtual void on_before_user_change (void) {}
-
-    virtual void on_after_user_change (void) {
-      this->reset_best();
-    }
+    virtual void on_after_user_change (void) { this->reset_best(); }
 
     siz_t evolve (siz_t space, siz_t old) {
       return this->evolve(this->_chr + old, this->_fit + old, space);

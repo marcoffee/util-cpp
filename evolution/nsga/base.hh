@@ -262,27 +262,6 @@ namespace util::evolution {
         ranked, ranked + all, this->popsize(), chr, fit, this->_dis, this->_fro
       );
 
-      static siz_t generation = 0;
-      static std::filesystem::path const saveto("data/points");
-
-      if (generation == 0) {
-        std::filesystem::create_directories(saveto);
-      }
-
-      std::ofstream file(saveto / std::to_string(generation));
-
-      for (siz_t i = 0; i < this->popsize(); ++i) {
-        file << fit[i] << " , 1 , " << this->_fro[i] << " , " << f_to_string(this->_dis[i]) << std::endl;
-      }
-
-      for (siz_t i = this->popsize(); i < all; ++i) {
-        file << fit[i] << " , 0" << std::endl;
-      }
-
-      file.close();
-
-      generation++;
-
       delete[] ends;
       delete[] ranked;
       return this->popsize();
@@ -316,31 +295,39 @@ namespace util::evolution {
     siz_t front_at (siz_t pos) const { return this->_fro[pos]; }
     dis_t distance_at (siz_t pos) const { return this->_dis[pos]; }
 
+    bool crowding_compare (dis_t da, dis_t db) const { return da > db; }
+
+    bool crowded_compare (siz_t fa, siz_t fb, dis_t da, dis_t db) const {
+      return fa < fb || (fa == fb && this->crowding_compare(da, db));
+    }
+
     index_comparator make_crowding_comparator (dis_t const* dis) const {
-      return [ dis ] (siz_t const& a, siz_t const& b) {
-        return dis[a] > dis[b];
+      return [ this, dis ] (siz_t const& a, siz_t const& b) {
+        return this->crowding_compare(dis[a], dis[b]);
       };
     }
 
     index_comparator make_crowding_comparator (void) const {
       return [ this ] (siz_t const& a, siz_t const& b) {
-        return this->distance_at(a) > this->distance_at(b);
+        return this->crowding_compare(
+          this->distance_at(a), this->distance_at(b)
+        );
       };
     }
 
     index_comparator make_crowded_comparator (
       siz_t const* fro, dis_t const* dis
     ) const {
-      return [ fro, dis ] (siz_t const& a, siz_t const& b) {
-        return fro[a] < fro[b] || (fro[a] == fro[b] && dis[a] > dis[b]);
+      return [ this, fro, dis ] (siz_t const& a, siz_t const& b) {
+        return this->crowded_compare(fro[a], fro[b], dis[a], dis[b]);
       };
     }
 
     index_comparator make_crowded_comparator (void) const {
       return [ this ] (siz_t const& a, siz_t const& b) {
-        return this->front_at(a) < this->front_at(b) || (
-          this->front_at(a) == this->front_at(b) &&
-          this->distance_at(a) > this->distance_at(b)
+        return this->crowded_compare(
+          this->front_at(a), this->front_at(b),
+          this->distance_at(a), this->distance_at(b)
         );
       };
     }

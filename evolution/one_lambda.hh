@@ -50,7 +50,9 @@ namespace __EVO_NAMESPACE {
     siz_t best (siz_t = 0) override { return 0; }
 
     void set_mutator (mutator const& mutate) {
-      this->set_generator(generators::mutate_only(mutate));
+      this->set_generator([ mutate ] (evo_t& evo) {
+        return mutate(evo, evo.chr_at(0));
+      });
     }
 
     uintmax_t& lambda (void) { return this->_lambda; }

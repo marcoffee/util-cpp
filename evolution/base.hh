@@ -65,12 +65,6 @@ namespace __EVO_NAMESPACE {
 
   private:
 
-    using alloc_type = std::allocator<int>;
-    using alloc_traits = std::allocator_traits<alloc_type>;
-
-    template <typename U>
-    using rebind_alloc = alloc_traits::rebind_alloc<U>;
-
     rnd_t _rnd;
     siz_t _dimensions = 0, _max_size = 0, _size = 0;
 
@@ -90,23 +84,11 @@ namespace __EVO_NAMESPACE {
     step_event _before_step = noop<step_event>;
     step_event _after_step = noop<step_event>;
 
-    alloc_type _alloc;
-
   protected:
 
-    template <typename U>
-    U* allocate (siz_t num) {
-      return rebind_alloc<U>(this->_alloc).allocate(num);
-    }
-
-    template <typename U>
-    void deallocate (U* ptr, siz_t num) {
-      rebind_alloc<U>(this->_alloc).deallocate(ptr, num);
-    }
-
     virtual void alloc (bool) {
-      this->_chr = this->allocate<chr_t>(this->max_size());
-      this->_fit = this->allocate<fit_t>(this->max_size());
+      this->_chr = new chr_t[this->max_size()];
+      this->_fit = new fit_t[this->max_size()];
 
       this->_best = new siz_t[this->dimensions()]();
       this->_best_set = new bool[this->dimensions()]();
@@ -125,8 +107,8 @@ namespace __EVO_NAMESPACE {
     }
 
     virtual void free (bool) {
-      this->deallocate(this->_chr, this->max_size());
-      this->deallocate(this->_fit, this->max_size());
+      delete[] this->_chr;
+      delete[] this->_fit;
 
       delete[] this->_best;
       delete[] this->_best_set;
@@ -181,7 +163,6 @@ namespace __EVO_NAMESPACE {
       this->_subtract = std::move(evo._subtract);
 
       this->_rnd = std::move(evo._rnd);
-      this->_alloc = std::move(evo._alloc);
 
       this->_create = std::move(evo._create);
       this->_generate = std::move(evo._generate);

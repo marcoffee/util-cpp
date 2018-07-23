@@ -10,7 +10,7 @@
 namespace util::evolution {
 
   __EVO_TMPL_HEAD
-  class nsga : public __BASE_CLASS {
+  class nsga : public __EVO_BASE {
 
   public:
     __EVO_USING_TYPES;
@@ -280,8 +280,8 @@ namespace util::evolution {
     nsga (siz_t popsize, siz_t dimensions, siz_t seed)
       : nsga(popsize, popsize, dimensions, seed) {}
 
-    nsga (nsga const& ot) : __BASE_CLASS(ot) { this->copy_from(ot, false); }
-    nsga (nsga&& ot) : __BASE_CLASS(std::move(ot)) { this->move_from(ot, false); }
+    nsga (nsga const& ot) : __EVO_BASE(ot) { this->copy_from(ot, false); }
+    nsga (nsga&& ot) : __EVO_BASE(std::move(ot)) { this->move_from(ot, false); }
 
     nsga& operator = (nsga const& ot) { return this->copy_from(ot, true); }
     nsga& operator = (nsga&& ot) { return this->move_from(ot, true); }

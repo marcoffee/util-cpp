@@ -6,7 +6,7 @@
 namespace util::evolution {
 
   __EVO_TMPL_HEAD
-  class one_lambda : public __BASE_CLASS {
+  class one_lambda : public __EVO_BASE {
   public:
     __EVO_USING_TYPES;
     __EVO_USING_FUNCTIONS;

@@ -6,7 +6,7 @@
 namespace util::evolution {
 
   __EVO_TMPL_HEAD
-  class genetic : public __BASE_CLASS {
+  class genetic : public __EVO_BASE {
   public:
     __EVO_USING_TYPES;
     __EVO_USING_FUNCTIONS;

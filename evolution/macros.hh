@@ -15,11 +15,11 @@ template <__EVO_TMPL_HEAD_ARGS>
 #define __EVO_CLASS(cls) \
 cls<T, F, RND>
 
-#define __BASE_CLASS \
+#define __EVO_BASE \
 __EVO_CLASS(base)
 
 #define __EVO_USING_TYPES \
-  using evo_t = __BASE_CLASS; \
+  using evo_t = __EVO_BASE; \
   using chr_t = T; \
   using fit_t = F; \
   using siz_t = uintmax_t; \
@@ -35,7 +35,7 @@ __EVO_CLASS(base)
   using step_event = std::function<void(evo_t&)>
 
 #define __EVO_USING_GENERATOR_FUNCTIONS \
-  using mutator = std::function<chr_v(evo_t&, chr_t const& chr)>; 
+  using mutator = std::function<chr_v(evo_t&, chr_t const& chr)>;
 
 #define __EVO_USING_GENERATOR \
   using generators     = __EVO_CLASS(util::evolution::generators); \

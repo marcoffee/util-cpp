@@ -198,6 +198,13 @@ namespace __EVO_NAMESPACE {
       ) : 0;
     }
 
+    siz_t find_worst (fit_t const* fit, siz_t size, siz_t dim = 0) {
+      return this->_compare[dim] ? *std::max_element(
+        util::iterator::range<siz_t>(0), util::iterator::range<siz_t>(size),
+        this->make_index_comparator(fit, dim)
+      ) : 0;
+    }
+
     siz_t update_best (siz_t dim = 0) {
       if (!this->_best_set[dim]) {
         this->_best[dim] = this->find_best(this->_fit, this->size(), dim);

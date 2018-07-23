@@ -11,8 +11,6 @@ namespace __EVO_NAMESPACE {
     __EVO_USING_TYPES(one_lambda);
     __EVO_USING_FUNCTIONS;
 
-    using gen_t = one_lambda;
-
   private:
     uintmax_t _lambda;
     bool _drift = true;

@@ -11,8 +11,6 @@ namespace __EVO_NAMESPACE {
     __EVO_USING_TYPES(genetic);
     __EVO_USING_FUNCTIONS;
 
-    using gen_t = genetic;
-
   protected:
     siz_t _popsize;
     siz_t _elitism = 1;

@@ -53,7 +53,7 @@ namespace util::evolution {
     evo_t* copy (void) const override { return new one_lambda(*this); }
     siz_t best (siz_t = 0) override { return 0; }
 
-    void set_mutator (single_mutator const& mutate) {
+    void set_mutator (mutator const& mutate) {
       this->set_generator(generators::mutate_only(mutate));
     }
 

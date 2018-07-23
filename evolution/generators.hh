@@ -54,6 +54,12 @@ namespace __EVO_NAMESPACE {
         return rank + 1;
       }
 
+      static mutation_counter constant_count (siz_t number) {
+        return [ number ] (evo_t&, siz_t, siz_t) {
+          return number;
+        };
+      }
+
     private:
       mutator _mutate;
       siz_t _cs;

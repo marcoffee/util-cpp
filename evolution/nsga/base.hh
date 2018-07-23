@@ -14,6 +14,9 @@ namespace __EVO_NAMESPACE {
     __EVO_USING_TYPES(nsga);
     __EVO_USING_FUNCTIONS;
 
+    using const_fro_iterator = siz_t const*;
+    using const_dis_iterator = dis_t const*;
+
   protected:
     siz_t _popsize;
     siz_t _children;
@@ -224,7 +227,10 @@ namespace __EVO_NAMESPACE {
     }
 
     siz_t initialize (chr_t* chr, fit_t* fit, siz_t) override {
-      return this->evo_t::initialize(chr, fit, this->popsize());
+      this->evo_t::initialize(chr, fit, this->popsize());
+      this->select(chr, fit, 0, this->popsize());
+
+      return this->popsize();
     }
 
     siz_t evolve (chr_t* chr, fit_t* fit, siz_t) override {
@@ -327,6 +333,8 @@ namespace __EVO_NAMESPACE {
       };
     }
 
+    expand_all_const_iterators((void), const_fro_iterator, this->_fro, this->_fro + this->size(), fro, false);
+    expand_all_const_iterators((void), const_dis_iterator, this->_dis, this->_dis + this->size(), dis, false);
   };
 
 };

@@ -8,9 +8,8 @@ namespace __EVO_NAMESPACE {
   __EVO_TMPL_HEAD
   class one_lambda : public __EVO_BASE {
   public:
-    __EVO_USING_TYPES;
+    __EVO_USING_TYPES(one_lambda);
     __EVO_USING_FUNCTIONS;
-    __EVO_USING_GENERATORS;
 
     using gen_t = one_lambda;
 

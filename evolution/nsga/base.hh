@@ -13,11 +13,8 @@ namespace __EVO_NAMESPACE {
   class nsga : public __EVO_BASE {
 
   public:
-    __EVO_USING_TYPES;
+    __EVO_USING_TYPES(nsga);
     __EVO_USING_FUNCTIONS;
-    __EVO_USING_GENERATORS;
-
-    using gen_t = nsga;
 
   protected:
     siz_t _popsize;

@@ -1,15 +1,14 @@
 #pragma once
 
-#include "base.hh"
+#include "macros.hh"
 
 namespace __EVO_NAMESPACE {
 
-  __EVO_TMPL_HEAD
-  class generators : public __EVO_BASE {
+  template <typename EVO>
+  class base_generators {
   public:
-    __EVO_USING_TYPES;
+    __EVO_COPY_TYPES(base_generators, typename EVO);
     __EVO_USING_FUNCTIONS;
-    __EVO_USING_GENERATORS_FUNCTIONS;
 
     static generator always_cross (
       generator const& cross, mutator const& mutate, double m_prob

@@ -8,9 +8,8 @@ namespace __EVO_NAMESPACE {
   __EVO_TMPL_HEAD
   class genetic : public __EVO_BASE {
   public:
-    __EVO_USING_TYPES;
+    __EVO_USING_TYPES(genetic);
     __EVO_USING_FUNCTIONS;
-    __EVO_USING_GENERATORS;
 
     using gen_t = genetic;
 

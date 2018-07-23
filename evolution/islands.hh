@@ -7,7 +7,8 @@ namespace __EVO_NAMESPACE {
   __EVO_TMPL_HEAD
   class islands {
   public:
-    __EVO_USING_TYPES;
+    __EVO_USING_TYPES(islands);
+    __EVO_USING_FUNCTIONS;
 
   private:
     rnd_t _rnd;

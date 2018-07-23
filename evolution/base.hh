@@ -7,13 +7,14 @@
 #include "../util_constexpr.hh"
 #include "../iterator.hh"
 #include "macros.hh"
+#include "generators.hh"
 
 namespace __EVO_NAMESPACE {
 
   __EVO_TMPL_HEAD
   class base {
   public:
-    __EVO_USING_TYPES;
+    __EVO_USING_TYPES(base);
     __EVO_USING_FUNCTIONS;
 
     static siz_t tournament (
@@ -227,6 +228,8 @@ namespace __EVO_NAMESPACE {
 
     virtual siz_t select (chr_t* chr, fit_t* fit, siz_t old, siz_t all) = 0;
 
+    virtual void on_before_start (void) {}
+
     virtual void on_before_user_change (void) {}
     virtual void on_after_user_change (void) { this->reset_best(); }
 
@@ -267,8 +270,8 @@ namespace __EVO_NAMESPACE {
     }
 
     void set_creator (creator const& crt) { this->_create = crt; }
-    void set_generator (generator const& gen) { this->_generate = gen; }
     void set_evaluator (evaluator const& evl) { this->_evaluate = evl; }
+    void set_generator (generator const& gen) { this->_generate = gen; }
 
     void set_comparator (simple_comparator const& cmp, siz_t dim = 0) {
       this->set_comparator([ cmp ] (evo_t&, fit_t const& f1, fit_t const& f2) {
@@ -284,10 +287,6 @@ namespace __EVO_NAMESPACE {
 
     void set_creator (simple_creator const& crt) {
       this->set_creator([ crt ] (evo_t&) { return crt(); });
-    }
-
-    void set_generator (simple_generator const& gen) {
-      this->set_generator([ gen ] (evo_t&) { return gen();});
     }
 
     void set_evaluator (simple_evaluator const& evl) {
@@ -330,6 +329,8 @@ namespace __EVO_NAMESPACE {
     fit_t evaluate (chr_t& chr) { return this->_evaluate(*this, chr); }
 
     void populate (siz_t size) {
+      this->on_before_start();
+
       siz_t const old = this->size();
       siz_t const pop = std::min(size, this->max_size());
 

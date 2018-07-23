@@ -527,8 +527,8 @@ namespace __EVO_NAMESPACE {
     inline siz_t max_size (void) const { return this->_max_size; }
     inline siz_t dimensions (void) const { return this->_dimensions; }
 
-    expand_all_const_iterators((void), const_chr_iterator, this->_chr, this->_chr + this->size(), chr, false)
-    expand_all_const_iterators((void), const_fit_iterator, this->_fit, this->_fit + this->size(), fit, false)
+    expand_all_const_iterators((void), const_chr_iterator, this->_chr, this->_chr + this->size(), chr, false);
+    expand_all_const_iterators((void), const_fit_iterator, this->_fit, this->_fit + this->size(), fit, false);
   };
 
 };

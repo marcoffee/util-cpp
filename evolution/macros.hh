@@ -1,10 +1,10 @@
 #pragma once
 
 #define __EVO_TMPL_ARGS \
-typename T, typename F, typename RND
+typename CHR, typename FIT, typename RND
 
 #define __EVO_TMPL_HEAD_ARGS \
-typename T, typename F = double, typename RND = std::mt19937
+typename CHR, typename FIT = double, typename RND = std::mt19937
 
 #define __EVO_NAMESPACE \
   util::evolution
@@ -16,7 +16,7 @@ typename T, typename F = double, typename RND = std::mt19937
   template <__EVO_TMPL_HEAD_ARGS>
 
 #define __EVO_CLASS(cls) \
-  cls<T, F, RND>
+  cls<CHR, FIT, RND>
 
 #define __EVO_BASE \
   __EVO_CLASS(base)
@@ -38,8 +38,8 @@ typename T, typename F = double, typename RND = std::mt19937
 
 #define __EVO_USING_TYPES \
   using evo_t = __EVO_BASE; \
-  using chr_t = T; \
-  using fit_t = F; \
+  using chr_t = CHR; \
+  using fit_t = FIT; \
   using siz_t = uintmax_t; \
   using dis_t = double; \
   using rnd_t = RND; \

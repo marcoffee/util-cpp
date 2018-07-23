@@ -1,10 +1,10 @@
 #pragma once
 
 #define __EVO_TMPL_ARGS \
-typename CHR, typename FIT, typename RND
+typename EVO_CHR, typename EVO_FIT, typename EVO_RND
 
 #define __EVO_TMPL_HEAD_ARGS \
-typename CHR, typename FIT = double, typename RND = std::mt19937
+typename EVO_CHR, typename EVO_FIT = double, typename EVO_RND = std::mt19937
 
 #define __EVO_NAMESPACE \
   util::evolution
@@ -16,10 +16,10 @@ typename CHR, typename FIT = double, typename RND = std::mt19937
   template <__EVO_TMPL_HEAD_ARGS>
 
 #define __EVO_CLASS(cls) \
-  cls<CHR, FIT, RND>
+  cls<EVO_CHR, EVO_FIT, EVO_RND>
 
 #define __EVO_BASE \
-  __EVO_CLASS(base)
+  ::__EVO_NAMESPACE::__EVO_CLASS(base)
 
 #define __EVO_CLASS_HEAD(name) \
   class name : __EVO_BASE
@@ -46,11 +46,11 @@ typename CHR, typename FIT = double, typename RND = std::mt19937
 #define __EVO_USING_TYPES(name) \
   using gen_t = name; \
   using evo_t = __EVO_BASE; \
-  using chr_t = CHR; \
-  using fit_t = FIT; \
+  using chr_t = EVO_CHR; \
+  using fit_t = EVO_FIT; \
   using siz_t = uintmax_t; \
   using dis_t = double; \
-  using rnd_t = RND; \
+  using rnd_t = EVO_RND; \
   using sed_t = typename rnd_t::result_type; \
   using chr_v = std::vector<chr_t>; \
   using fit_v = std::vector<fit_t>; \

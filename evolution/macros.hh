@@ -25,7 +25,7 @@ typename CHR, typename FIT = double, typename RND = std::mt19937
   class name : __EVO_BASE
 
 #define __EVO_COPY_TYPES(name, from) \
-  using gen_t = name; \
+  using gen_t = from::gen_t; \
   using evo_t = from::evo_t; \
   using chr_t = from::chr_t; \
   using fit_t = from::fit_t; \

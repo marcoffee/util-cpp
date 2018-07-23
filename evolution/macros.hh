@@ -18,7 +18,7 @@ typename T, typename F = double, typename RND = std::mt19937
 #define __EVO_CLASS(cls) \
   cls<T, F, RND>
 
-#define __EVO_BASE
+#define __EVO_BASE \
   __EVO_CLASS(base)
 
 #define __EVO_COPY_TYPES(FROM) \

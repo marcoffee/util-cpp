@@ -3,7 +3,7 @@
 #include "base.hh"
 #include "generators.hh"
 
-namespace util::evolution {
+namespace __EVO_NAMESPACE {
 
   __EVO_TMPL_HEAD
   class one_lambda : public __EVO_BASE {

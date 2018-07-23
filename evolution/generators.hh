@@ -2,7 +2,7 @@
 
 #include "base.hh"
 
-namespace util::evolution {
+namespace __EVO_NAMESPACE {
 
   __EVO_TMPL_HEAD
   class generators : public __EVO_BASE {

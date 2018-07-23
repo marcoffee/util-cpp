@@ -6,6 +6,8 @@ typename T, typename F, typename RND
 #define __EVO_TMPL_HEAD_ARGS \
 typename T, typename F = double, typename RND = std::mt19937
 
+#define __EVO_NAMESPACE util::evolution
+
 #define __EVO_TMPL \
 template <__EVO_TMPL_ARGS>
 

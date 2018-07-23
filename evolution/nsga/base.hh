@@ -7,7 +7,7 @@
 #include "../base.hh"
 #include "../generators.hh"
 
-namespace util::evolution {
+namespace __EVO_NAMESPACE {
 
   __EVO_TMPL_HEAD
   class nsga : public __EVO_BASE {

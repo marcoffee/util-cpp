@@ -59,27 +59,27 @@ typename T, typename F = double, typename RND = std::mt19937
   using mutator = std::function<chr_v(evo_t&, chr_t const& chr)>
 
 #define __EVO_COPY_GENERATORS(FROM) \
-  using generator = FROM::generator; \
+  using generators = FROM::generators; \
   __EVO_COPY_GENERATORS_FUNCTIONS(FROM)
 
 #define __EVO_USING_GENERATORS \
-  using generators     = __EVO_CLASS(util::evolution::generators); \
+  using generators = __EVO_CLASS(util::evolution::generators); \
   __EVO_USING_GENERATORS_FUNCTIONS
 
 #define __EVO_COPY_FUNCTIONS(FROM) \
-  using creator = FROM::creator; \
-  using generator = FROM::generator; \
-  using evaluator = FROM::evaluator; \
+  using creator    = FROM::creator; \
+  using generator  = FROM::generator; \
+  using evaluator  = FROM::evaluator; \
   using comparator = FROM::comparator; \
   using subtractor = FROM::subtractor; \
   \
-  using simple_creator = FROM::simple_creator; \
-  using simple_generator = FROM::simple_generator; \
-  using simple_evaluator = FROM::simple_evaluator; \
+  using simple_creator    = FROM::simple_creator; \
+  using simple_generator  = FROM::simple_generator; \
+  using simple_evaluator  = FROM::simple_evaluator; \
   using simple_comparator = FROM::simple_comparator; \
   using simple_subtractor = FROM::simple_subtractor; \
   \
-  using index_comparator = FROM::index_comparator
+  using index_comparator  = FROM::index_comparator
 
 #define __EVO_USING_FUNCTIONS \
   using creator    = std::function<chr_t(evo_t&)>; \

@@ -84,13 +84,13 @@ typename CHR, typename FIT = double, typename RND = std::mt19937
 #define __EVO_USING_FUNCTIONS \
   using creator    = std::function<chr_t(evo_t&)>; \
   using generator  = std::function<chr_v(evo_t&)>; \
-  using evaluator  = std::function<fit_t(evo_t&, chr_t const&)>; \
+  using evaluator  = std::function<fit_t(evo_t&, chr_t&)>; \
   using comparator = std::function<bool(evo_t&, fit_t const&, fit_t const&)>; \
   using subtractor = std::function<dis_t(evo_t&, fit_t const&, fit_t const&)>; \
   \
   using simple_creator    = std::function<chr_t()>; \
   using simple_generator  = std::function<chr_v()>; \
-  using simple_evaluator  = std::function<fit_t(chr_t const&)>; \
+  using simple_evaluator  = std::function<fit_t(chr_t&)>; \
   using simple_comparator = std::function<bool(fit_t const&, fit_t const&)>; \
   using simple_subtractor = function_ret_rebind<simple_comparator, double>; \
   \

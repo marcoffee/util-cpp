@@ -346,7 +346,7 @@ namespace __EVO_NAMESPACE {
 
     chr_t create (void) { return this->_create(*this); }
     chr_v generate (void) { return this->_generate(*this); }
-    fit_t evaluate (chr_t const& chr) { return this->_evaluate(*this, chr); }
+    fit_t evaluate (chr_t& chr) { return this->_evaluate(*this, chr); }
 
     void populate (siz_t size) {
       siz_t const old = this->size();
@@ -514,7 +514,7 @@ namespace __EVO_NAMESPACE {
       fit_v fits;
       fits.reserve(chrs.size());
 
-      for (chr_t const& chr : chrs) {
+      for (chr_t& chr : chrs) {
         fits.emplace_back(this->evaluate(chr));
       }
 

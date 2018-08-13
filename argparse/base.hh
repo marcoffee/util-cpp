@@ -107,7 +107,7 @@ namespace util {
 
     string_map<string_vector> _data;
     string_map<bool> _set;
-    using map_iterator = string_vector::iterator;
+    using map_iterator = string_vector::const_iterator;
 
     template <typename T>
     class iterator
@@ -117,14 +117,16 @@ namespace util {
       conversor<T> _convert;
 
     public:
+      iterator (void) {}
+
       iterator (map_iterator const real, conversor<T> const& convert)
-      : _real(real), _convert(convert) {};
+      : _real(real), _convert(convert) {}
 
       inline iterator& operator ++ (void) { ++this->_real; return *this; }
       inline iterator& operator -- (void) { --this->_real; return *this; }
 
-      inline iterator operator ++ (int) { return iterator(this->_real++); }
-      inline iterator operator -- (int) { return iterator(this->_real--); }
+      inline iterator operator ++ (int) { return iterator(this->_real++, this->_convert); }
+      inline iterator operator -- (int) { return iterator(this->_real--, this->_convert); }
 
       inline bool operator == (iterator const& ot) { return this->_real == ot._real; }
       inline bool operator != (iterator const& ot) { return this->_real != ot._real; }

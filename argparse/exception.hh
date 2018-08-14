@@ -17,6 +17,12 @@ namespace util {
     : exception(what) {};
   };
 
+  class param_unknown : public param_exception {
+  public:
+    param_unknown (std::string const& name)
+    : param_exception("Unknown param '" + name + "'.") {}
+  };
+
   class param_name_exists : public param_exception {
   public:
     param_name_exists (std::string const& name)

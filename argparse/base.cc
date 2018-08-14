@@ -187,15 +187,18 @@ namespace util {
 
   argparse::params argparse::parse (uintmax_t const& argc, char const* const* argv) {
     argparse::params result(this->_default, this->_non_default);
+    uintmax_t pos_filled = 0;
     uintmax_t i = 1;
 
     while (i < argc) {
-      std::string name;
+      std::string name(argv[i]);
 
-      if (i <= this->_positional.size()) {
-        name = this->_positional[i - 1];
+      if (this->maybe_arg(name)) {
+        i++;
+      } else if (pos_filled < this->_positional.size()) {
+        name = this->_positional[pos_filled++];
       } else {
-        name = argv[i++];
+        throw param_unknown(name);
       }
 
       this->assert_param_exists(name);
@@ -204,21 +207,15 @@ namespace util {
 
       if (opt.is_enabler()) {
         result.set(name, "1", true);
-        continue;
-      }
 
-      if (opt.is_disabler()) {
+      } else if (opt.is_disabler()) {
         result.set(name, "0", true);
-        continue;
-      }
 
-      if (opt.is_counter()) {
+      } else if (opt.is_counter()) {
         std::string& value = result.get_ref(name);
         value = std::to_string(std::stoull(value) + 1);
-        continue;
-      }
 
-      if (opt.is_multiple()) {
+      } else if (opt.is_multiple()) {
         while (i < argc) {
           std::string const arg(argv[i]);
 
@@ -230,10 +227,8 @@ namespace util {
           result.set(name, arg);
           ++i;
         }
-        continue;
-      }
 
-      if (i < argc) {
+      } else if (i < argc) {
         std::string const arg(argv[i]);
 
         if (!this->maybe_arg(arg)) {

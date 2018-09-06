@@ -210,8 +210,6 @@ namespace __EVO_NAMESPACE {
     }
 
     virtual siz_t evolve (chr_t* chr, fit_t* fit, siz_t space) {
-      std::uniform_real_distribution<double> dist;
-
       for (siz_t i = 0; i < space; ) {
         for (chr_t& child : this->generate()) {
           chr[i] = std::move(child);
@@ -226,6 +224,10 @@ namespace __EVO_NAMESPACE {
       return space;
     }
 
+    virtual siz_t evolve (chr_t* chr, fit_t* fit, siz_t old, siz_t all) {
+      return old + this->evolve(chr + old, fit + old, all - old);
+    }
+
     virtual siz_t select (chr_t* chr, fit_t* fit, siz_t old, siz_t all) = 0;
 
     virtual void on_before_start (void) {}
@@ -233,8 +235,8 @@ namespace __EVO_NAMESPACE {
     virtual void on_before_user_change (void) {}
     virtual void on_after_user_change (void) { this->reset_best(); }
 
-    siz_t evolve (siz_t space, siz_t old) {
-      return this->evolve(this->_chr + old, this->_fit + old, space);
+    siz_t evolve (siz_t old, siz_t all) {
+      return this->evolve(this->_chr, this->_fit, old, all);
     }
 
     siz_t select (siz_t old, siz_t all) {
@@ -389,9 +391,9 @@ namespace __EVO_NAMESPACE {
       this->_before_step(*this);
 
       siz_t const old = this->size();
-      siz_t const space = this->max_size() - this->size();
+      siz_t const all = this->max_size();
 
-      this->_size = this->select(old, old + this->evolve(space, old));
+      this->_size = this->select(old, this->evolve(old, all));
       this->reset_best();
 
       if (this->size() < old) {

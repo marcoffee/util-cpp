@@ -7,5 +7,6 @@
 #include "evolution/clonalg.hh"
 #include "evolution/genetic.hh"
 #include "evolution/nsga.hh"
+#include "evolution/nsais.hh"
 
 #include "evolution/islands.hh"

@@ -15,8 +15,11 @@ typename EVO_CHR, typename EVO_FIT = double, typename EVO_RND = std::mt19937
 #define __EVO_TMPL_HEAD \
   template <__EVO_TMPL_HEAD_ARGS>
 
+#define __EVO_TMPL_CLASS_ARGS \
+  EVO_CHR, EVO_FIT, EVO_RND
+
 #define __EVO_CLASS(cls) \
-  cls<EVO_CHR, EVO_FIT, EVO_RND>
+  cls<__EVO_TMPL_CLASS_ARGS>
 
 #define __EVO_BASE \
   ::__EVO_NAMESPACE::__EVO_CLASS(base)

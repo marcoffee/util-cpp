@@ -298,8 +298,21 @@ namespace __EVO_NAMESPACE {
 
     bool crowding_compare (dis_t da, dis_t db) const { return da > db; }
 
-    bool crowded_compare (siz_t fa, siz_t fb, dis_t da, dis_t db) const {
+    bool crowded_compare (siz_t fa, dis_t da, siz_t fb, dis_t db) const {
       return fa < fb || (fa == fb && this->crowding_compare(da, db));
+    }
+
+    bool crowded_compare (siz_t const& a, siz_t const& b) const {
+      return this->crowded_compare(
+        this->front_at(a), this->distance_at(a),
+        this->front_at(b), this->distance_at(b)
+      );
+    }
+
+    bool crowded_compare (
+      siz_t const* fro, dis_t const* dis, siz_t const& a, siz_t const& b
+    ) const {
+      return this->crowded_compare(fro[a], dis[a], fro[b], dis[b]);
     }
 
     index_comparator make_crowding_comparator (dis_t const* dis) const {
@@ -320,16 +333,13 @@ namespace __EVO_NAMESPACE {
       siz_t const* fro, dis_t const* dis
     ) const {
       return [ this, fro, dis ] (siz_t const& a, siz_t const& b) {
-        return this->crowded_compare(fro[a], fro[b], dis[a], dis[b]);
+        return this->crowded_compare(fro, dis, a, b);
       };
     }
 
     index_comparator make_crowded_comparator (void) const {
       return [ this ] (siz_t const& a, siz_t const& b) {
-        return this->crowded_compare(
-          this->front_at(a), this->front_at(b),
-          this->distance_at(a), this->distance_at(b)
-        );
+        return this->crowded_compare(a, b);
       };
     }
 

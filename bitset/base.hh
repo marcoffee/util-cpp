@@ -298,13 +298,13 @@ public:
     return *this->_popcount;
   }
 
-  friend bitset* make_bits (bitset* bits, uintmax_t inputs, uintmax_t use_bits);
+  friend bitset* make_bits (bitset* bits, uintmax_t inputs, uintmax_t use_bits, uintmax_t const* positions);
   friend bitset* make_bits (bitset* bits, uintmax_t inputs, uintmax_t use_bits, mpz_class& status, bool const* keep);
 };
 
 std::ostream& operator << (std::ostream& out, bitset const& bs);
 
-bitset* make_bits (bitset* bits, uintmax_t inputs, uintmax_t use_bits = 0);
+bitset* make_bits (bitset* bits, uintmax_t inputs, uintmax_t use_bits = 0, uintmax_t const* positions = nullptr);
 bitset* make_bits (bitset* bits, uintmax_t inputs, uintmax_t use_bits, mpz_class& status, bool const* keep = nullptr);
 
 template <typename RND>

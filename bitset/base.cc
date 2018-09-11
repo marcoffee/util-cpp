@@ -293,7 +293,7 @@ std::ostream& operator << (std::ostream& out, bitset const& bs) {
   return out;
 }
 
-bitset* make_bits (bitset* bits, uintmax_t inputs, uintmax_t use_bits) {
+bitset* make_bits (bitset* bits, uintmax_t inputs, uintmax_t use_bits, uintmax_t const* positions) {
   static constexpr std::array<bitset::type, bitset::bits_shift> const lookup(
     pattern_array<bitset::type>::value
   );
@@ -308,27 +308,28 @@ bitset* make_bits (bitset* bits, uintmax_t inputs, uintmax_t use_bits) {
   uintmax_t const zeroed = inputs - use_bits;
 
   for (uintmax_t i = 0; i < inputs; ++i) {
-    bits[i] = bitset(p2);
+    bits[positions ? positions[i] : i] = bitset(p2);
   }
 
   #pragma omp parallel for schedule(static)
   for (uintmax_t i = zeroed; i < inputs; ++i) {
+    bitset& bs = bits[positions ? positions[i] : i];
 
     if (i < not_filled) {
       uintmax_t const skip = 1 << (not_filled - i - 1), add = skip << 1;
       uintmax_t j = skip, popcount = 0;
 
-      while (j < bits[i].buckets()) {
-        bits[i].fill_n(j, skip, bitset::ones, false);
+      while (j < bs.buckets()) {
+        bs.fill_n(j, skip, bitset::ones, false);
         popcount += bitset::bits * skip;
         j += add;
       }
 
-      *bits[i]._popcount = popcount;
-      bits[i].fix_last<true>();
+      *bs._popcount = popcount;
+      bs.fix_last<true>();
 
     } else {
-      bits[i].fill(lookup[(lookup.size() + i) - inputs]);
+      bs.fill(lookup[(lookup.size() + i) - inputs]);
     }
   }
 

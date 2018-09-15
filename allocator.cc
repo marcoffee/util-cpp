@@ -1,3 +1,5 @@
+#include <atomic>
+#include "atomic.hh"
 #include "allocator.hh"
 
 namespace util::allocator {
@@ -6,7 +8,7 @@ namespace util::allocator {
 
   void add_memory (uintmax_t const size) {
     _total += size;
-    util::atomic_max(_peak, now());
+    util::atomic::max(_peak, now());
   }
 
   void free_memory (uintmax_t const size) {

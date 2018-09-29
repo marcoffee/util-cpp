@@ -37,7 +37,7 @@ def fetch_headers (fname):
 
                 yield header
 
-argparser = argparse.ArgumentParser()
+argparser = argparse.ArgumentParser(prog = os.path.basename(__file__))
 
 argparser.add_argument("files", type = str, nargs = "+")
 argparser.add_argument("-headers", type = str, default = None, nargs = "+")

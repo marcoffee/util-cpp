@@ -72,9 +72,9 @@ bitset& bitset::AND (bitset const& a, bitset const& b, bitset& out) {
   uintmax_t const a_p = a.popcount(), a_s = a.size();
   uintmax_t const b_p = b.popcount(), b_s = b.size();
 
-  if (a_p == 0 || b_p == b_s || a.fast_compare(b) == bitset::compare::equal) {
+  if (a_p == 0 or b_p == b_s or a.fast_compare(b) == bitset::compare::equal) {
     out = a;
-  } else if (b_p == 0 || a_p == a_s) {
+  } else if (b_p == 0 or a_p == a_s) {
     out = b;
   } else {
     OP_2(a, b, out, &, EMPTY_ARG);
@@ -88,9 +88,9 @@ bitset& bitset::OR (bitset const& a, bitset const& b, bitset& out) {
   uintmax_t const a_p = a.popcount(), a_s = a.size();
   uintmax_t const b_p = b.popcount(), b_s = b.size();
 
-  if (a_p == a_s || b_p == 0 || a.fast_compare(b) == bitset::compare::equal) {
+  if (a_p == a_s or b_p == 0 or a.fast_compare(b) == bitset::compare::equal) {
     out = a;
-  } else if (b_p == b_s || a_p == 0) {
+  } else if (b_p == b_s or a_p == 0) {
     out = b;
   } else {
     OP_2(a, b, out, |, EMPTY_ARG);
@@ -126,9 +126,9 @@ bitset& bitset::NAND (bitset const& a, bitset const& b, bitset& out) {
   uintmax_t const a_p = a.popcount(), a_s = a.size();
   uintmax_t const b_p = b.popcount(), b_s = b.size();
 
-  if (a_p == 0 || b_p == b_s || a.fast_compare(b) == bitset::compare::equal) {
+  if (a_p == 0 or b_p == b_s or a.fast_compare(b) == bitset::compare::equal) {
     bitset::NOT(a, out);
-  } else if (b_p == 0 || a_p == a_s) {
+  } else if (b_p == 0 or a_p == a_s) {
     bitset::NOT(b, out);
   } else {
     OP_2(a, b, out, &, ~);
@@ -142,9 +142,9 @@ bitset& bitset::NOR (bitset const& a, bitset const& b, bitset& out) {
   uintmax_t const a_p = a.popcount(), a_s = a.size();
   uintmax_t const b_p = b.popcount(), b_s = b.size();
 
-  if (a_p == a_s || b_p == 0 || a.fast_compare(b) == bitset::compare::equal) {
+  if (a_p == a_s or b_p == 0 or a.fast_compare(b) == bitset::compare::equal) {
     bitset::NOT(a, out);
-  } else if (b_p == b_s || a_p == 0) {
+  } else if (b_p == b_s or a_p == 0) {
     bitset::NOT(b, out);
   } else {
     OP_2(a, b, out, |, ~);
@@ -229,7 +229,7 @@ bool operator <  (bitset const& a, bitset const& b) {
 
   if (cmp == bitset::compare::smaller) {
     return true;
-  } else if (cmp == bitset::compare::equal || cmp == bitset::compare::bigger) {
+  } else if (cmp == bitset::compare::equal or cmp == bitset::compare::bigger) {
     return false;
   }
 
@@ -359,7 +359,7 @@ bitset* make_bits (bitset* bits, uintmax_t inputs, uintmax_t use_bits, mpz_class
   for (uintmax_t i = 0; i < inputs; ++i) {
     uintmax_t const pos = inputs - i - 1;
 
-    if (keep && keep[pos]) {
+    if (keep and keep[pos]) {
       continue;
     }
 

@@ -117,7 +117,7 @@ namespace util::iterator {
 
   __NDIM_IT_FUNC(constexpr bool)::operator == (__NDIM_IT const& ot) const {
     for (uintmax_t i = 0; i < D; ++i) {
-      if (this->_idx[i] != ot._idx[i] || this->_size[i] != ot._size[i]) {
+      if (this->_idx[i] != ot._idx[i] or this->_size[i] != ot._size[i]) {
         return false;
       }
     }
@@ -129,7 +129,7 @@ namespace util::iterator {
     for (uintmax_t dim = D; dim > 0; --dim) {
       uintmax_t d = dim - 1;
 
-      if (++this->_idx[d] != this->_size[d] || d == 0) {
+      if (++this->_idx[d] != this->_size[d] or d == 0) {
         break;
       }
 
@@ -181,7 +181,7 @@ namespace util::iterator {
 
   __NDIM_IT_FUNC(constexpr bool)::operator > (__NDIM_IT const& ot) const {
     for (uintmax_t i = 0; i < D; ++i) {
-      if (this->_idx[i] > ot._idx[i] || this->_size[i] > ot._size[i]) {
+      if (this->_idx[i] > ot._idx[i] or this->_size[i] > ot._size[i]) {
         return true;
       }
     }
@@ -191,7 +191,7 @@ namespace util::iterator {
 
   __NDIM_IT_FUNC(constexpr bool)::operator < (__NDIM_IT const& ot) const {
     for (uintmax_t i = 0; i < D; ++i) {
-      if (this->_idx[i] < ot._idx[i] || this->_size[i] < ot._size[i]) {
+      if (this->_idx[i] < ot._idx[i] or this->_size[i] < ot._size[i]) {
         return true;
       }
     }

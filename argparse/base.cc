@@ -18,7 +18,7 @@ namespace util {
 
   bool argparse::params::is_set (std::string const& name) const {
     auto it = this->_set.find(name);
-    return it != this->_set.end() && it->second;
+    return it != this->_set.end() and it->second;
   }
 
   void argparse::params::set (std::string const& name, std::string const& val, bool replace) {
@@ -90,7 +90,7 @@ namespace util {
 
   bool argparse::valid_name (std::string const& name) {
     for (char const c : name) {
-      if (!isalnum(c) && c != '-' && c != '_') {
+      if (!isalnum(c) and c != '-' and c != '_') {
         return false;
       }
     }
@@ -117,7 +117,7 @@ namespace util {
   }
 
   void argparse::assert_param_positional (std::string const& name, option const& opt) const {
-    if (opt.is_enabler() || opt.is_disabler() || opt.is_counter()) {
+    if (opt.is_enabler() or opt.is_disabler() or opt.is_counter()) {
       throw param_positional_invalid_options(name);
     }
 
@@ -129,29 +129,29 @@ namespace util {
   }
 
   void argparse::assert_options (std::string const& name, option const& opt) const {
-    if (opt.is_enabler() || opt.is_disabler() || opt.is_counter()) {
+    if (opt.is_enabler() or opt.is_disabler() or opt.is_counter()) {
       if (opt.is_multiple()) {
         throw options_invalid_edc_multiple(name);
       } else if (opt.is_required()) {
         throw options_invalid_edc_required(name);
-      } else if (opt.is_enabler() && opt.is_counter()) {
+      } else if (opt.is_enabler() and opt.is_counter()) {
         throw options_invalid_enable_count(name);
-      } else if (opt.is_enabler() && opt.is_disabler()) {
+      } else if (opt.is_enabler() and opt.is_disabler()) {
         throw options_invalid_enable_disable(name);
-      } else if (opt.is_disabler() && opt.is_counter()) {
+      } else if (opt.is_disabler() and opt.is_counter()) {
         throw options_invalid_disable_count(name);
       }
     }
   }
 
   void argparse::assert_non_default (std::string const& name, option const& opt) const {
-    if (!(opt.is_required() || opt.is_multiple() || opt.is_enabler() || opt.is_disabler() || opt.is_counter())) {
+    if (!(opt.is_required() or opt.is_multiple() or opt.is_enabler() or opt.is_disabler() or opt.is_counter())) {
       throw param_non_default_invalid(name);
     }
   }
 
   void argparse::assert_choices (std::string const& name, option const& opt, string_set const& choices) const {
-    if (!choices.empty() && (opt.is_enabler() || opt.is_disabler() || opt.is_counter())) {
+    if (!choices.empty() and (opt.is_enabler() or opt.is_disabler() or opt.is_counter())) {
       throw param_choices_edc(name);
     }
   }
@@ -159,13 +159,13 @@ namespace util {
   void argparse::assert_choices_arg (std::string const& name, std::string const& param) const {
     auto it = this->_choices.find(name);
 
-    if (it != this->_choices.end() && !it->second.count(param)) {
+    if (it != this->_choices.end() and !it->second.count(param)) {
       throw param_choices_not_exist(name, param);
     }
   }
 
   void argparse::assert_param_required (std::string const& name, option const& opt, argparse::params const& args) const {
-    if (opt.is_required() && !args.is_set(name)) {
+    if (opt.is_required() and !args.is_set(name)) {
       throw param_is_required(name);
     }
   }
@@ -251,7 +251,7 @@ namespace util {
 
     if (opt.is_disabler()) {
       def = "1";
-    } else if (opt.is_enabler() || (def.empty() && opt.is_counter())) {
+    } else if (opt.is_enabler() or (def.empty() and opt.is_counter())) {
       def = "0";
     }
 
@@ -270,7 +270,7 @@ namespace util {
 
     this->_options.emplace(name, std::move(opt));
 
-    if (opt.is_enabler() || opt.is_counter()) {
+    if (opt.is_enabler() or opt.is_counter()) {
       this->_default.emplace(name, "0");
     } else if (opt.is_disabler()) {
       this->_default.emplace(name, "1");

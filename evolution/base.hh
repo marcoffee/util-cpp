@@ -352,7 +352,7 @@ namespace __EVO_NAMESPACE {
     }
 
     void partition_best (chr_t* chr, fit_t* fit, siz_t size, siz_t nth, siz_t dim = 0) {
-      if (nth > 0 && nth < size) {
+      if (nth > 0 and nth < size) {
         util::iterator::multipartition(
           this->make_simple_comparator(dim), fit, fit + size, nth, chr, fit
         );
@@ -360,7 +360,7 @@ namespace __EVO_NAMESPACE {
     }
 
     void partition_worst (chr_t* chr, fit_t* fit, siz_t size, siz_t nth, siz_t dim = 0) {
-      if (nth > 0 && nth < size) {
+      if (nth > 0 and nth < size) {
         util::iterator::multipartition(
           std::not_fn(this->make_simple_comparator(dim)),
           std::make_reverse_iterator(fit + size),

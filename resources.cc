@@ -5,12 +5,12 @@
  *          http://creativecommons.org/licenses/by/3.0/deed.en_US
  */
 
-#define SUN_DEF (defined(__sun__) || defined(__sun) || defined(sun))
-#define SRV4_DEF (defined(__SVR4) || defined(__svr4__))
-#define OSX_DEF (defined(__APPLE__) && defined(__MACH__))
-#define UNIX_DEF (defined(__unix__) || defined(__unix) || defined(unix))
-#define AIX_DEF (defined(_AIX) || defined(__TOS__AIX__))
-#define LINUX_DEF (defined(__linux__) || defined(__linux) || defined(linux) || defined(__gnu_linux__))
+#define SUN_DEF (defined(__sun__) or defined(__sun) or defined(sun))
+#define SRV4_DEF (defined(__SVR4) or defined(__svr4__))
+#define OSX_DEF (defined(__APPLE__) and defined(__MACH__))
+#define UNIX_DEF (defined(__unix__) or defined(__unix) or defined(unix))
+#define AIX_DEF (defined(_AIX) or defined(__TOS__AIX__))
+#define LINUX_DEF (defined(__linux__) or defined(__linux) or defined(linux) or defined(__gnu_linux__))
 #define WIN_DEF (defined(_WIN32))
 
 #include "resources.hh"
@@ -19,14 +19,14 @@
 #include <windows.h>
 #include <psapi.h>
 
-#elif UNIX_DEF || OSX_DEF
+#elif UNIX_DEF or OSX_DEF
 #include <unistd.h>
 #include <sys/resource.h>
 
 #if OSX_DEF
 #include <mach/mach.h>
 
-#elif AIX_DEF || (SUN_DEF && SRV4_DEF)
+#elif AIX_DEF or (SUN_DEF and SRV4_DEF)
 #include <fcntl.h>
 #include <procfs.h>
 
@@ -52,7 +52,7 @@ namespace rss {
   	GetProcessMemoryInfo(GetCurrentProcess(), &info, sizeof(info));
   	return info.PeakWorkingSetSize;
 
-  #elif AIX_DEF || (SUN_DEF && SRV4_DEF) // AIX and Solaris
+  #elif AIX_DEF or (SUN_DEF and SRV4_DEF) // AIX and Solaris
   	int const fd = open("/proc/self/psinfo", O_RDONLY);
 
   	if (fd != -1) { // Can't open?
@@ -69,7 +69,7 @@ namespace rss {
   	close(fd);
   	return result;
 
-  #elif UNIX_DEF || OSX_DEF // BSD, Linux, and OSX
+  #elif UNIX_DEF or OSX_DEF // BSD, Linux, and OSX
   	struct rusage rusage;
   	getrusage(RUSAGE_SELF, &rusage);
 

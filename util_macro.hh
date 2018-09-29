@@ -29,9 +29,9 @@
 #endif
 
 #define do_every(start, every, max, at) \
-if ((every) != 0 && ( \
-  ((at) == (start)) || \
-  (((max) != 0) && ((at) + (every) >= (max))) || \
+if ((every) != 0 and ( \
+  ((at) == (start)) or \
+  (((max) != 0) and ((at) + (every) >= (max))) or \
   (((at) % (every)) == 0) \
 ))
 

@@ -55,7 +55,7 @@ std::ostream& operator << (std::ostream& out, print_container<CONT> const& pc) {
   if (!pc.cont.empty()) {
     out << pc.border;
 
-    if (pc.max_size != 0 && pc.cont.size() > pc.max_size) {
+    if (pc.max_size != 0 and pc.cont.size() > pc.max_size) {
       uintmax_t const pieces = pc.max_size >> 1;
       auto stop_it = pc.cont.begin(), rest_it = pc.cont.begin();
 
@@ -112,7 +112,7 @@ public:
 
 template <
   typename IT, typename CIT = IT,
-  typename = std::enable_if_t<is_iterator_v<IT> && is_iterator_v<CIT>>
+  typename = std::enable_if_t<is_iterator_v<IT> and is_iterator_v<CIT>>
 >
 constexpr container<IT, CIT> make_container (IT beg, IT end) {
   return container<IT, CIT>(beg, end);

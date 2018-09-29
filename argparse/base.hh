@@ -90,7 +90,7 @@ namespace util {
     }
 
     inline bool maybe_arg (std::string const& name) const {
-      return name[0] == '-' && this->exists(name);
+      return name[0] == '-' and this->exists(name);
     }
 
   };
@@ -145,7 +145,7 @@ namespace util {
       } else if constexpr (std::is_floating_point_v<T>) {
         return std::stold(value);
       } else if constexpr (std::is_same_v<T, bool>) {
-        return !(value.empty() || value == "0");
+        return !(value.empty() or value == "0");
       } else if constexpr (std::is_unsigned_v<T>) {
         return std::stoull(value);
       } else if constexpr (std::is_signed_v<T>) {

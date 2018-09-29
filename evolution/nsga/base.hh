@@ -161,7 +161,7 @@ namespace __EVO_NAMESPACE {
       siz_t found = 0;
       bool stop = false;
 
-      while (queue != ranked && !stop) {
+      while (queue != ranked and !stop) {
         siz_t const pos = *(queue++);
 
         for (siz_t const dom : dominated[pos]) {
@@ -299,7 +299,7 @@ namespace __EVO_NAMESPACE {
     bool crowding_compare (dis_t da, dis_t db) const { return da > db; }
 
     bool crowded_compare (siz_t fa, dis_t da, siz_t fb, dis_t db) const {
-      return fa < fb || (fa == fb && this->crowding_compare(da, db));
+      return fa < fb or (fa == fb and this->crowding_compare(da, db));
     }
 
     bool crowded_compare (siz_t const& a, siz_t const& b) const {

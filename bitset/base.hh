@@ -222,7 +222,7 @@ public:
   }
 
   inline bool is (bitset const& b) const {
-    return this->mask() == b.mask() && this->data() == b.data();
+    return this->mask() == b.mask() and this->data() == b.data();
   }
 
   inline compare fast_compare (bitset const& b) const {
@@ -238,7 +238,7 @@ public:
       return compare::different;
     }
 
-    if (this->is(b) || this->popcount() == this->size() || this->popcount() == 0) {
+    if (this->is(b) or this->popcount() == this->size() or this->popcount() == 0) {
       return compare::equal;
     }
 

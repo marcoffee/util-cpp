@@ -3,6 +3,7 @@
 #include <list>
 #include <unordered_map>
 #include <string>
+#include <string_view>
 #include <iterator>
 #include <iostream>
 #include "util_constexpr.hh"
@@ -19,7 +20,7 @@ template <typename IT, typename = typename std::enable_if_t<
 >>
 void print_iterator (
   std::ostream& out, IT begin, IT end,
-  std::string const& sep = ", ", std::string const& align = ""
+  std::string_view sep = ", ", std::string_view align = ""
 ) {
   for (IT it = begin; it != end; ++it) {
     if (it != begin) {
@@ -32,47 +33,81 @@ void print_iterator (
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template <typename CONT>
-struct print_container {
-  CONT const& cont;
-  uintmax_t max_size;
-  std::string const& sep, align, border, open, close;
+template <typename T>
+class print_container {
+  T const& cont;
+  uintmax_t limit_;
+  std::string_view sep_, align_, border_, open_, close_;
 
-  print_container (
-    CONT const& cont, uintmax_t max_size = 0,
-    std::string const& sep = ", ", std::string const& align = "",
-    std::string const& border = "", std::string const& open = "",
-    std::string const& close = ""
-  ) : cont{ cont }, max_size{ max_size },
-      sep{ sep }, align{ align }, border{ border },
-      open{ open }, close{ close } {}
+  template <typename U>
+  friend std::ostream& operator << (std::ostream&, print_container<U> const&);
+
+ public:
+  constexpr print_container (
+    T const& cont, uintmax_t limit = 0,
+    std::string_view sep = ", ", std::string_view align = "",
+    std::string_view border = "", std::string_view open = "",
+    std::string_view close = ""
+  ) : cont{ cont }, limit_{ limit },
+      sep_{ sep }, align_{ align }, border_{ border },
+      open_{ open }, close_{ close } {}
+
+  constexpr print_container& sep (std::string_view sep) {
+    this->sep_ = sep;
+    return *this;
+  }
+
+  constexpr print_container& align (std::string_view align) {
+    this->align_ = align;
+    return *this;
+  }
+
+  constexpr print_container& border (std::string_view border) {
+    this->border_ = border;
+    return *this;
+  }
+
+  constexpr print_container& open (std::string_view open) {
+    this->open_ = open;
+    return *this;
+  }
+
+  constexpr print_container& close (std::string_view close) {
+    this->close_ = close;
+    return *this;
+  }
+
+  constexpr print_container& limit (uintmax_t limit) {
+    this->limit_ = limit;
+    return *this;
+  }
 };
 
-template <typename CONT>
-std::ostream& operator << (std::ostream& out, print_container<CONT> const& pc) {
-  out << pc.open;
+template <typename T>
+std::ostream& operator << (std::ostream& out, print_container<T> const& pc) {
+  out << pc.open_;
 
   if (!pc.cont.empty()) {
-    out << pc.border;
+    out << pc.border_;
 
-    if (pc.max_size != 0 and pc.cont.size() > pc.max_size) {
-      uintmax_t const pieces = pc.max_size >> 1;
+    if (pc.limit_ != 0 and pc.cont.size() > pc.limit_) {
+      uintmax_t const pieces = pc.limit_ >> 1;
       auto stop_it = pc.cont.begin(), rest_it = pc.cont.begin();
 
       std::advance(stop_it, pieces);
       std::advance(rest_it, pc.cont.size() - pieces);
 
-      print_iterator(out, pc.cont.begin(), stop_it, pc.sep, pc.align);
-      out << pc.sep << pc.align << "..." << pc.sep;
-      print_iterator(out, rest_it, pc.cont.end(), pc.sep, pc.align);
+      print_iterator(out, pc.cont.begin(), stop_it, pc.sep_, pc.align_);
+      out << pc.sep_ << pc.align_ << "..." << pc.sep_;
+      print_iterator(out, rest_it, pc.cont.end(), pc.sep_, pc.align_);
     } else {
-      print_iterator(out, pc.cont.begin(), pc.cont.end(), pc.sep, pc.align);
+      print_iterator(out, pc.cont.begin(), pc.cont.end(), pc.sep_, pc.align_);
     }
 
-    out << pc.border;
+    out << pc.border_;
   }
 
-  out << pc.close;
+  out << pc.close_;
   return out;
 }
 

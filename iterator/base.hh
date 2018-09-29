@@ -1,6 +1,7 @@
 #pragma once
 
 #include <numeric>
+#include <iostream>
 #include "../util_constexpr.hh"
 
 #define TEMPL_ITERATOR(IT) \
@@ -163,7 +164,7 @@ namespace util::iterator {
     }
 
     for (uintmax_t i = 0; i < stop_at; ++i) {
-      uintmax_t p1 = mapper[i], p2 = mapper[*(beg + i)];
+      uintmax_t const p1 = mapper[i], p2 = mapper[*(beg + i)];
       multiswap(i, p2, std::forward<ARGS>(args)...);
       mapper[p1] = p2;
       mapper[p2] = p1;

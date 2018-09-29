@@ -5,6 +5,12 @@
 
 namespace util::vector {
 
+  template <typename T>
+  void real_clear (T& vec) {
+    vec.clear();
+    vec.shrink_to_fit();
+  }
+
   template <typename T, uintmax_t C>
   struct _multi {
     using type = std::vector<typename _multi<T, C - 1>::type>;

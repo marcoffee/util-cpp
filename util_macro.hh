@@ -81,3 +81,11 @@ if ((every) != 0 && ( \
 #define expand_all_const_iterators(param, cit, _b, _e, suf, ce) \
   expand_const_iterators(param, cit, _b, _e, suf, ce) \
   expand_const_reverse_iterators(param, cit, _b, _e, suf, ce)
+
+#define time_start(tid) \
+  auto __time_ ## tid = std::chrono::high_resolution_clock::now()
+
+#define time_end(tid) \
+  std::chrono::duration<double>{ \
+    std::chrono::high_resolution_clock::now() - (__time_ ## tid) \
+  }.count()

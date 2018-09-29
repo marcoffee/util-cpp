@@ -86,19 +86,27 @@ public:
   using reverse_iterator = std::reverse_iterator<iterator>;
   using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
+  using value_type = typename std::iterator_traits<iterator>::value_type;
+  using iterator_category = typename std::iterator_traits<iterator>::iterator_category;
+
 private:
-  IT _begin, _end;
+  IT begin_, end_;
 
 public:
-  constexpr container (IT begin, IT end) : _begin(begin), _end(end) {};
+  constexpr container (IT begin, IT end) : begin_(begin), end_(end) {};
 
-  constexpr bool empty (void) const { return this->_begin == this->_end; }
+  constexpr bool empty (void) const { return this->begin_ == this->end_; }
 
   constexpr uintmax_t size (void) const {
-    return std::distance(this->_begin, this->_end);
+    return std::distance(this->begin_, this->end_);
   }
 
-  expand_all_iterators((void), iterator, const_iterator, this->_begin, this->_end, EMPTY_ARG, true);
+  std::enable_if_t<
+    std::is_same_v<iterator_category, std::random_access_iterator_tag>,
+    value_type const&
+  > operator [] (intmax_t idx) { return *(this->begin_ + idx); }
+
+  expand_all_iterators((void), iterator, const_iterator, this->begin_, this->end_, EMPTY_ARG, true);
 };
 
 template <

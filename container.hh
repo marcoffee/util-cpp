@@ -39,12 +39,13 @@ struct print_container {
   std::string const& sep, align, border, open, close;
 
   print_container (
-    CONT const& cont, uintmax_t max_size,
+    CONT const& cont, uintmax_t max_size = 0,
     std::string const& sep = ", ", std::string const& align = "",
     std::string const& border = "", std::string const& open = "",
     std::string const& close = ""
-  ) : cont(cont), max_size(max_size),
-      sep(sep), align(align), border(border), open(open), close(close) {}
+  ) : cont{ cont }, max_size{ max_size },
+      sep{ sep }, align{ align }, border{ border },
+      open{ open }, close{ close } {}
 };
 
 template <typename CONT>
@@ -93,7 +94,7 @@ private:
   IT begin_, end_;
 
 public:
-  constexpr container (IT begin, IT end) : begin_(begin), end_(end) {};
+  constexpr container (IT begin, IT end) : begin_{ begin }, end_{ end } {};
 
   constexpr bool empty (void) const { return this->begin_ == this->end_; }
 

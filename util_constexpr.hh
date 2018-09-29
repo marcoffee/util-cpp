@@ -7,6 +7,15 @@
 
 namespace util {
   constexpr double PI = 3.141592653589793238463;
+
+  template <typename T, template <typename...> typename TMPL>
+  struct is_specialization_of : std::false_type {};
+
+  template <template <typename...> typename TMPL, typename... ARGS>
+  struct is_specialization_of<TMPL<ARGS...>, TMPL> : std::true_type {};
+
+  template <typename T, template <typename...> typename TMPL>
+  constexpr bool is_specialization_of_v = is_specialization_of<T, TMPL>::value;
 };
 
 template <uintmax_t N>
@@ -187,7 +196,6 @@ struct change_arg : _change_arg<P, 0, C, ARGS...>::template _sub_change_arg<> {}
 template <uintmax_t P, typename C, typename... ARGS>
 using change_arg_t = typename change_arg<P, C, ARGS...>::type;
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename, typename>
@@ -269,7 +277,7 @@ template <typename... ARGS>
 struct _noop<void(ARGS...)> { static constexpr void value (ARGS&&...) {}; };
 
 template <typename T = void()>
-static const std::function<T> noop = _noop<T>::value;
+static const std::function<T> noop{ _noop<T>::value };
 
 template <typename R, typename... ARGS>
 static const std::function<R(ARGS...)>

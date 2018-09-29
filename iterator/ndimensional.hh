@@ -6,13 +6,13 @@
 
 namespace util::iterator {
 
-  #define __NDIM_IT ndimensional<D, V, PTR, REF>
+  #define __NDIM_IT ndimensional<T, D, V, PTR, REF>
 
   #define __NDIM_IT_FUNC(type)\
-  template <uintmax_t D, typename V, typename PTR, typename REF>\
+  template <typename T, uintmax_t D, typename V, typename PTR, typename REF> \
   type __NDIM_IT
 
-  template <uintmax_t D, typename V, typename PTR = V, typename REF = V>
+  template <typename T, uintmax_t D, typename V, typename PTR = V, typename REF = V>
   class ndimensional {
 
   public:
@@ -22,10 +22,8 @@ namespace util::iterator {
     using reference = REF;
     using iterator_category = std::random_access_iterator_tag;
     using index = std::array<uintmax_t, D>;
-    using getter = std::function<reference(index const&)>;
 
   private:
-    getter _get;
     index _size, _idx;
 
   public:
@@ -33,13 +31,14 @@ namespace util::iterator {
     constexpr static void relative_pos (uintmax_t abso, index const& size, index& out);
 
     constexpr ndimensional (
-      getter get, index const& size, index const& idx = { 0, 0 }
-    ) : _get(get), _size(size), _idx(idx) {};
+      index const& size, index const& idx = { 0, 0 }
+    ) : _size(size), _idx(idx) {};
 
     constexpr uintmax_t const absolute_pos (void) const {
       return ndimensional::absolute_pos(this->_size, this->_idx);
     }
 
+    virtual reference get (index const& idx) const = 0;
     uintmax_t const& idx (uintmax_t dim) const { return this->_idx[dim]; }
 
     constexpr bool operator == (ndimensional const& ot) const;
@@ -47,33 +46,33 @@ namespace util::iterator {
       return !(*this == ot);
     }
 
-    constexpr reference operator * (void) const { return this->_get(this->_idx); }
+    constexpr reference operator * (void) const { return this->get(this->_idx); }
 
-    constexpr ndimensional& operator ++ (void);
-    constexpr ndimensional& operator -- (void);
+    constexpr T& operator ++ (void);
+    constexpr T& operator -- (void);
 
-    constexpr ndimensional operator ++ (int) {
-      ndimensional old = *this; ++(*this); return old;
+    constexpr T operator ++ (int) {
+      T old = static_cast<T&>(*this); ++(*this); return old;
     }
 
-    constexpr ndimensional operator -- (int) {
-      ndimensional old = *this; --(*this); return old;
+    constexpr T operator -- (int) {
+      T old = static_cast<T&>(*this); --(*this); return old;
     }
 
-    constexpr ndimensional& operator += (intmax_t diff);
-    constexpr ndimensional& operator -= (intmax_t diff);
+    constexpr T& operator += (intmax_t diff);
+    constexpr T& operator -= (intmax_t diff);
 
-    constexpr ndimensional operator + (intmax_t diff) const {
-      return (ndimensional(*this) += diff);
+    constexpr T operator + (intmax_t diff) const {
+      return (T{ static_cast<T const&>(*this) } += diff);
     }
 
-    constexpr ndimensional operator - (intmax_t diff) const {
-      return (ndimensional(*this) -= diff);
+    constexpr T operator - (intmax_t diff) const {
+      return (T{ static_cast<T const&>(*this) } -= diff);
     }
 
-    constexpr friend ndimensional operator + (
-      intmax_t diff, ndimensional const& it
-    ) { return it + diff; }
+    constexpr friend T operator + (intmax_t diff, ndimensional const& it) {
+      return static_cast<T const&>(it) + diff;
+    }
 
     constexpr V operator [] (intmax_t diff) const { return *(*this + diff); }
 
@@ -126,7 +125,7 @@ namespace util::iterator {
     return true;
   }
 
-  __NDIM_IT_FUNC(constexpr __NDIM_IT&)::operator ++ (void) {
+  __NDIM_IT_FUNC(constexpr T&)::operator ++ (void) {
     for (uintmax_t dim = D; dim > 0; --dim) {
       uintmax_t d = dim - 1;
 
@@ -137,10 +136,10 @@ namespace util::iterator {
       this->_idx[d] = 0;
     }
 
-    return *this;
+    return static_cast<T&>(*this);
   }
 
-  __NDIM_IT_FUNC(constexpr __NDIM_IT&)::operator -- (void) {
+  __NDIM_IT_FUNC(constexpr T&)::operator -- (void) {
     for (uintmax_t dim = D; dim > 0; --dim) {
       uintmax_t d = dim - 1;
 
@@ -152,10 +151,10 @@ namespace util::iterator {
       this->_idx[d] = this->_size[d] - 1;
     }
 
-    return *this;
+    return static_cast<T&>(*this);
   }
 
-  __NDIM_IT_FUNC(constexpr __NDIM_IT&)::operator -= (intmax_t diff) {
+  __NDIM_IT_FUNC(constexpr T&)::operator -= (intmax_t diff) {
     if (diff < 0) {
       return (*this += -diff);
 
@@ -165,10 +164,10 @@ namespace util::iterator {
       pos = (udiff > pos) ? 0 : pos - udiff;
       __NDIM_IT::relative_pos(pos, this->_size, this->_idx);
     }
-    return *this;
+    return static_cast<T&>(*this);
   }
 
-  __NDIM_IT_FUNC(constexpr __NDIM_IT&)::operator += (intmax_t diff) {
+  __NDIM_IT_FUNC(constexpr T&)::operator += (intmax_t diff) {
     if (diff < 0) {
       return (*this -= -diff);
 
@@ -177,7 +176,7 @@ namespace util::iterator {
       __NDIM_IT::relative_pos(pos, this->_size, this->_idx);
     }
 
-    return *this;
+    return static_cast<T&>(*this);
   }
 
   __NDIM_IT_FUNC(constexpr bool)::operator > (__NDIM_IT const& ot) const {

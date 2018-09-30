@@ -16,6 +16,16 @@ namespace util {
 
   template <typename T, template <typename...> typename TMPL>
   constexpr bool is_specialization_of_v = is_specialization_of<T, TMPL>::value;
+
+////////////////////////////////////////////////////////////////////////////////
+
+  template <typename T, T... sigs>
+  struct make_array_st {
+    constexpr static std::array<T, sizeof...(sigs)> const value{ sigs... };
+  };
+
+  template <typename T, T... sigs>
+  constexpr auto const& make_array{ make_array_st<T, sigs...>::value };
 };
 
 template <uintmax_t N>

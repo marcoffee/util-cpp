@@ -1,76 +1,63 @@
+#include <iomanip>
 #include "base.hh"
 #include "macros.hh"
 
-void bitset::fill_data (bool zeros) {
-  uintmax_t last;
-  bitset::bitset_sizes(this->size(), this->_buckets, last);
+void bitset::copy_meta (bitset const& ot) {
+  this->mask_ = ot.mask_;
+}
 
-  if (last) {
-    this->_last = (static_cast<bitset::type>(1) << last) - 1;
-  } else {
-    this->_last = bitset::ones;
+void bitset::release (void) {
+  this->impl_ = nullptr;
+  this->mask_ = 0;
+}
+
+void bitset::free (void) {
+  if (this->impl_ != nullptr) {
+    if (!--this->impl_->ref_) {
+      delete[] this->impl_->data_;
+      delete this->impl_;
+    }
+
+    this->release();
+  }
+}
+
+bitset& bitset::copy_from (bitset& ot) {
+  if (this != &ot) {
+    this->free();
+    this->copy_meta(ot);
+    this->impl_ = ot.impl_;
+    ++this->impl_->ref_;
   }
 
-  this->alloc_data(zeros);
-
-  if (!zeros) {
-    this->fix_popcount();
-  }
-}
-
-void bitset::alloc_data (bool zeros) {
-  this->set_data(
-    ts_ptr<uintmax_t>::make(0),
-    ts_ptr<bitset::type[]>::make(this->buckets(), zeros)
-  );
-}
-
-void bitset::copy_meta (bitset const& other) {
-  this->_last = other._last;
-  this->_size = other._size;
-  this->_buckets = other._buckets;
-  this->_mask = other._mask;
-}
-
-void bitset::set_data (ts_ptr<uintmax_t> const& popcount, ts_ptr<bitset::type[]> const& guard) {
-  this->_popcount = popcount;
-  this->_guard = guard;
-  this->_data = guard.get();
-}
-
-void bitset::release_data (void) {
-  this->_popcount.release();
-  this->_guard.release();
-  this->_data = nullptr;
-}
-
-bitset& bitset::copy_from (bitset const& other) {
-  this->copy_meta(other);
-  this->set_data(other._popcount, other._guard);
   return *this;
 }
 
-bitset& bitset::move_from (bitset& other) {
-  this->copy_meta(other);
-  this->set_data(other._popcount, other._guard);
-  other.free();
+bitset& bitset::move_from (bitset& ot) {
+  if (this != &ot) {
+    this->free();
+    this->copy_meta(ot);
+    this->impl_ = ot.impl_;
+    ot.release();
+  }
+
   return *this;
 }
 
 void bitset::fix_popcount (void) {
-  uintmax_t result = 0;
+  siz_t result = 0;
 
   #pragma omp simd reduction(+: result)
-  for (uintmax_t i = 0; i < this->buckets(); ++i) {
-    result += ::popcount(this->_data[i]);
+  for (siz_t i = 0; i < this->buckets(); ++i) {
+    result += ::popcount(this->data(i));
   }
 
-  *this->_popcount = result;
+  this->impl_->popcount_ = result;
 }
 
-bitset& bitset::AND (bitset const& a, bitset const& b, bitset& out) {
-  uintmax_t const a_p = a.popcount(), a_s = a.size();
-  uintmax_t const b_p = b.popcount(), b_s = b.size();
+bitset& bitset::AND (bitset a, bitset b, bitset& out) {
+  siz_t const a_p = a.popcount(), a_s = a.size();
+  siz_t const b_p = b.popcount(), b_s = b.size();
 
   if (a_p == 0 or b_p == b_s or a.fast_compare(b) == bitset::compare::equal) {
     out = a;
@@ -84,9 +71,9 @@ bitset& bitset::AND (bitset const& a, bitset const& b, bitset& out) {
   return out;
 }
 
-bitset& bitset::OR (bitset const& a, bitset const& b, bitset& out) {
-  uintmax_t const a_p = a.popcount(), a_s = a.size();
-  uintmax_t const b_p = b.popcount(), b_s = b.size();
+bitset& bitset::OR (bitset a, bitset b, bitset& out) {
+  siz_t const a_p = a.popcount(), a_s = a.size();
+  siz_t const b_p = b.popcount(), b_s = b.size();
 
   if (a_p == a_s or b_p == 0 or a.fast_compare(b) == bitset::compare::equal) {
     out = a;
@@ -100,9 +87,9 @@ bitset& bitset::OR (bitset const& a, bitset const& b, bitset& out) {
   return out;
 }
 
-bitset& bitset::XOR (bitset const& a, bitset const& b, bitset& out) {
-  uintmax_t const a_p = a.popcount(), a_s = a.size();
-  uintmax_t const b_p = b.popcount(), b_s = b.size();
+bitset& bitset::XOR (bitset a, bitset b, bitset& out) {
+  siz_t const a_p = a.popcount(), a_s = a.size();
+  siz_t const b_p = b.popcount(), b_s = b.size();
 
   if (a_p == 0) {
     out = b;
@@ -122,202 +109,119 @@ bitset& bitset::XOR (bitset const& a, bitset const& b, bitset& out) {
   return out;
 }
 
-bitset& bitset::NAND (bitset const& a, bitset const& b, bitset& out) {
-  uintmax_t const a_p = a.popcount(), a_s = a.size();
-  uintmax_t const b_p = b.popcount(), b_s = b.size();
-
-  if (a_p == 0 or b_p == b_s or a.fast_compare(b) == bitset::compare::equal) {
-    bitset::NOT(a, out);
-  } else if (b_p == 0 or a_p == a_s) {
-    bitset::NOT(b, out);
-  } else {
-    OP_2(a, b, out, &, ~);
-    out.fix_popcount();
-  }
-
-  return out;
-}
-
-bitset& bitset::NOR (bitset const& a, bitset const& b, bitset& out) {
-  uintmax_t const a_p = a.popcount(), a_s = a.size();
-  uintmax_t const b_p = b.popcount(), b_s = b.size();
-
-  if (a_p == a_s or b_p == 0 or a.fast_compare(b) == bitset::compare::equal) {
-    bitset::NOT(a, out);
-  } else if (b_p == b_s or a_p == 0) {
-    bitset::NOT(b, out);
-  } else {
-    OP_2(a, b, out, |, ~);
-    out.fix_popcount();
-  }
-
-  return out;
-}
-
-bitset& bitset::XNOR (bitset const& a, bitset const& b, bitset& out) {
-  uintmax_t const a_p = a.popcount(), a_s = a.size();
-  uintmax_t const b_p = b.popcount(), b_s = b.size();
-
-  if (a_p == 0) {
-    bitset::NOT(b, out);
-  } else if (b_p == 0) {
-    bitset::NOT(a, out);
-  } else if (a_p == a_s) {
-    out = b;
-  } else if (b_p == b_s) {
-    out = a;
-  } else if (a.fast_compare(b) == bitset::compare::equal) {
-    out.set();
-  } else {
-    OP_2(a, b, out, ^, ~);
-    out.fix_popcount();
-  }
-
-  return out;
-}
-
-bitset& bitset::MAJ (bitset const& a, bitset const& b, bitset const& c, bitset& out) {
+bitset& bitset::MAJ (bitset a, bitset b, bitset c, bitset& out) {
   OP_3(a, b, c, out, maj, EMPTY_ARG);
   out.fix_popcount();
   return out;
 }
 
-bitset& bitset::MIN (bitset const& a, bitset const& b, bitset const& c, bitset& out) {
-  OP_3(a, b, c, out, maj, ~);
-  out.fix_popcount();
-  return out;
-}
-
-bitset& bitset::ITE (bitset const& a, bitset const& b, bitset const& c, bitset& out) {
+bitset& bitset::ITE (bitset a, bitset b, bitset c, bitset& out) {
   OP_3(a, b, c, out, ite, EMPTY_ARG);
   out.fix_popcount();
   return out;
 }
 
-void bitset::free (void) {
-  this->_size = 0;
-  this->_last = 0;
-  this->_buckets = 0;
-  this->_mask = 0;
-  this->release_data();
-}
-
 bitset bitset::copy (void) const {
-  bitset bs;
-  bs.copy_meta(*this);
-  bs.alloc_data(false);
-
-  std::copy_n(this->_data, this->buckets(), bs._data);
-  *bs._popcount = this->popcount();
+  bitset bs(this->size(), false);
+  std::copy_n(this->data(), this->buckets(), bs.data());
+  bs.impl_->popcount_ = this->popcount();
   return bs;
 }
 
-bool bitset::iter_bits (uintmax_t& pos, bool& out) const {
-  if (pos >= this->size()) {
-    return false;
-  }
-
-  uintmax_t const ind = bitset::get_ind(pos), bit = bitset::get_bit(pos);
-  pos++;
-
-  out = ((this->_data[ind] ^ this->mask()) >> bit) & 1;
-  return true;
-}
-
-bool operator <  (bitset const& a, bitset const& b) {
-  bitset::compare const cmp = a.fast_compare(b);
-
-  if (cmp == bitset::compare::smaller) {
-    return true;
-  } else if (cmp == bitset::compare::equal or cmp == bitset::compare::bigger) {
-    return false;
-  }
-
-  if (a.mask() == b.mask()) {
-    bool const lesser = std::lexicographical_compare(
-      a.data(), a.data() + a.buckets(), b.data(), b.data() + b.buckets()
-    );
-
-    if (a.mask()) {
-      return !lesser;
-    }
-
-    return lesser;
-  }
-
-  uintmax_t const last = a.buckets() - 1;
-
-  for (uintmax_t i = 0; i < last; ++i) {
-    if ((a._data[i] ^ a.mask()) < (b._data[i] ^ b.mask())) {
-      return true;
-    }
-  }
-
-  return ((a._data[last] ^ a.mask()) & a.last()) < ((b._data[last] ^ b.mask()) & b.last());
-}
-
-bool operator == (bitset const& a, bitset const& b) {
-  bitset::compare const cmp = a.fast_compare(b);
+bool bitset::operator == (bitset const& ot) const {
+  bitset::compare const cmp = this->fast_compare(ot);
 
   if (cmp == bitset::compare::equal) {
     return true;
+
   } else if (cmp != bitset::compare::unknown) {
     return false;
   }
 
-  if (a.mask() == b.mask()) {
+  if (this->mask() == ot.mask()) {
     return std::equal(
-      a.data(), a.data() + a.buckets(), b.data(), b.data() + b.buckets()
+      this->data(), this->data() + this->buckets(),
+      ot.data(), ot.data() + ot.buckets()
     );
   }
 
-  uintmax_t const last = a.buckets() - 1;
+  siz_t const last = this->buckets() - 1;
 
-  for (uintmax_t i = 0; i < last; ++i) {
-    if ((a._data[i] ^ a.mask()) != (b._data[i] ^ b.mask())) {
+  for (siz_t i = 0; i < last; ++i) {
+    if ((this->data(i) ^ this->mask()) != (ot.data(i) ^ ot.mask())) {
       return false;
     }
   }
 
-  return ((a._data[last] ^ a.mask()) & a.last()) == ((b._data[last] ^ b.mask()) & b.last());
+  return (
+    ((this->data(last) ^ this->mask()) & this->last_mask()) ==
+    ((ot.data(last) ^ ot.mask()) & ot.last_mask())
+  );
 }
 
-std::ostream& operator << (std::ostream& out, bitset const& bs) {
-  uintmax_t pos = 0;
-  bool bit;
+bitset::operator std::string (void) const {
+  using bck_t = bitset::bck_t;
+  using siz_t = bitset::siz_t;
 
-  while (bs.iter_bits(pos, bit)) {
-    out << bit;
+  if (!this->buckets()) {
+    return "0";
   }
 
-  return out;
+  std::string result;
+  result.reserve(this->size());
+
+  siz_t const last_pos = this->buckets() - 1;
+
+  for (siz_t i = 0; i < last_pos; ++i) {
+    constexpr siz_t wid = bitset::bits >> 2;
+    bck_t const bck = this->data(i) ^ this->mask();
+    std::ostringstream ss;
+    ss << std::hex << std::setw(wid) << std::setfill('0') << std::right << bck;
+
+    std::string const& str = ss.str();
+    std::copy(str.rbegin(), str.rend(), std::back_inserter(result));
+  }
+
+  std::ostringstream ss;
+  bck_t const bck = (this->data(last_pos) ^ this->mask()) & this->last_mask();
+  siz_t const wid = (this->last_bits() + 3) / 4;
+  ss << std::hex<< std::setw(wid) << std::setfill('0') << std::right << bck;
+
+  std::cout << wid << std::endl;
+
+  std::string const& str = ss.str();
+  std::copy(str.rbegin(), str.rend(), std::back_inserter(result));
+
+  return result;
 }
 
-bitset* make_bits (bitset* bits, uintmax_t inputs, uintmax_t use_bits, uintmax_t const* positions) {
-  static constexpr std::array<bitset::type, bitset::bits_shift> const lookup(
-    pattern_array<bitset::type>::value
-  );
+bitset* bitset::build_combinations (
+  bitset* bits, siz_t inputs, siz_t use_bits, siz_t const* positions
+) {
+  static constexpr std::array<bitset::bck_t, bitset::bits_shift> const lookup{
+    pattern_array<bitset::bck_t>::value
+  };
 
   if (use_bits == 0) {
     use_bits = inputs;
   }
 
-  uintmax_t const p2 = UINTMAX_C(1) << use_bits;
-  uintmax_t const filled = std::min(inputs, bitset::bits_shift);
-  uintmax_t const not_filled = inputs - filled;
-  uintmax_t const zeroed = inputs - use_bits;
+  siz_t const p2 = bitset::siz_t{ 1 } << use_bits;
+  siz_t const filled = std::min(inputs, bitset::bits_shift);
+  siz_t const not_filled = inputs - filled;
+  siz_t const zeroed = inputs - use_bits;
 
-  for (uintmax_t i = 0; i < inputs; ++i) {
+  for (siz_t i = 0; i < inputs; ++i) {
     bits[positions ? positions[i] : i] = bitset(p2);
   }
 
   #pragma omp parallel for schedule(static)
-  for (uintmax_t i = zeroed; i < inputs; ++i) {
+  for (siz_t i = zeroed; i < inputs; ++i) {
     bitset& bs = bits[positions ? positions[i] : i];
 
     if (i < not_filled) {
-      uintmax_t const skip = 1 << (not_filled - i - 1), add = skip << 1;
-      uintmax_t j = skip, popcount = 0;
+      siz_t const skip = 1 << (not_filled - i - 1), add = skip << 1;
+      siz_t j = skip, popcount = 0;
 
       while (j < bs.buckets()) {
         bs.fill_n(j, skip, bitset::ones, false);
@@ -325,7 +229,7 @@ bitset* make_bits (bitset* bits, uintmax_t inputs, uintmax_t use_bits, uintmax_t
         j += add;
       }
 
-      *bs._popcount = popcount;
+      bs.impl_->popcount_ = popcount;
       bs.fix_last<true>();
 
     } else {
@@ -336,28 +240,30 @@ bitset* make_bits (bitset* bits, uintmax_t inputs, uintmax_t use_bits, uintmax_t
   return bits;
 }
 
-bitset* make_bits (bitset* bits, uintmax_t inputs, uintmax_t use_bits, mpz_class& status, bool const* keep) {
-
+bitset* bitset::build_combinations (
+  bitset* bits, siz_t inputs, siz_t use_bits, mpz_class& status,
+  bool const* keep
+) {
   mpz_class const max_status = 1_mpz << inputs;
 
   if (status >= max_status) {
     return nullptr;
   }
 
-  uintmax_t const p2 = UINTMAX_C(1) << use_bits;
+  siz_t const p2 = siz_t{ 1 } << use_bits;
 
   if (!status) {
     status = p2;
-    return make_bits(bits, inputs, use_bits);
+    return bitset::build_combinations(bits, inputs, use_bits);
   }
 
-  uintmax_t last, buckets;
+  siz_t last, buckets;
 
   bitset::bitset_sizes(p2, buckets, last);
 
   #pragma omp parallel for schedule(guided)
-  for (uintmax_t i = 0; i < inputs; ++i) {
-    uintmax_t const pos = inputs - i - 1;
+  for (siz_t i = 0; i < inputs; ++i) {
+    siz_t const pos = inputs - i - 1;
 
     if (keep and keep[pos]) {
       continue;
@@ -369,11 +275,11 @@ bitset* make_bits (bitset* bits, uintmax_t inputs, uintmax_t use_bits, mpz_class
     mpz_set(mpz_status, status.get_mpz_t());
 
     bits[pos] = bitset(p2);
-    bitset::type* data = bits[pos]._data;
+    bitset::bck_t* data = bits[pos].data();
 
-    for (uintmax_t j = 0; j < buckets; ++j) {
-      for (uintmax_t k = 0; k < bitset::bits; ++k) {
-        bitset::type const bit = mpz_tstbit(mpz_status, i);
+    for (siz_t j = 0; j < buckets; ++j) {
+      for (siz_t k = 0; k < bitset::bits; ++k) {
+        bitset::bck_t const bit = mpz_tstbit(mpz_status, i);
         data[j] |= bit << k;
         mpz_add_ui(mpz_status, mpz_status, 1);
       }

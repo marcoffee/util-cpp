@@ -2,15 +2,15 @@
 
 #define OP_1(a, out, una)\
 _Pragma("omp simd")\
-for (uint i = 0; i < a.buckets(); ++i) {\
-  out._data[i] = una(a._data[i]);\
+for (bitset::siz_t i = 0; i < a.buckets(); ++i) {\
+  out.data(i) = una(a.data(i));\
 }\
 out.fix_last<true>();
 
 #define OP_2(a, b, out, op, una)\
 _Pragma("omp simd")\
-for (uint i = 0; i < a.buckets(); ++i) {\
-  out._data[i] = una((a._data[i] ^ a._mask) op (b._data[i] ^ b._mask));\
+for (bitset::siz_t i = 0; i < a.buckets(); ++i) {\
+  out.data(i) = una((a.data(i) ^ a.mask()) op (b.data(i) ^ b.mask()));\
 }\
 out.fix_last<true>();
 
@@ -19,7 +19,7 @@ out.fix_last<true>();
 
 #define OP_3(a, b, c, out, op, una)\
 _Pragma("omp simd")\
-for (uint i = 0; i < a.buckets(); ++i) {\
-  out._data[i] = una(op(a._data[i] ^ a._mask, b._data[i] ^ b._mask, c._data[i] ^ c._mask));\
+for (bitset::siz_t i = 0; i < a.buckets(); ++i) {\
+  out.data(i) = una(op(a.data(i) ^ a.mask(), b.data(i) ^ b.mask(), c.data(i) ^ c.mask()));\
 }\
 out.fix_last<true>();

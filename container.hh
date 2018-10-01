@@ -1,209 +1,229 @@
 #pragma once
 
+#include <vector>
+#include <deque>
+#include <array>
 #include <list>
+#include <set>
+#include <unordered_set>
 #include <unordered_map>
+#include <map>
 #include <string>
 #include <string_view>
 #include <iterator>
 #include <iostream>
 #include "util_constexpr.hh"
 
-extern std::string
-  default_sep, default_align, default_border, default_open, default_close,
-  vector_sep, vector_align, vector_border, vector_open, vector_close,
-  map_sep, map_align, map_border, map_open, map_close;
+namespace util {
 
-extern uintmax_t default_max_print, vector_max_print, map_max_print;
+  // Class to print containers
+  template <typename T>
+  class printer {
+   public:
+    using const_iterator = typename T::const_iterator;
 
-template <typename IT, typename = typename std::enable_if_t<
-  !std::is_same_v<typename std::iterator_traits<IT>::value_type, void>
->>
-void print_iterator (
-  std::ostream& out, IT begin, IT end,
-  std::string_view sep = ", ", std::string_view align = ""
-) {
-  for (IT it = begin; it != end; ++it) {
-    if (it != begin) {
-      out << sep;
+   private:
+    T const& cont_;
+    uintmax_t limit_;
+    std::string_view sep_, align_, border_, open_, close_;
+
+    // Internal function to print an iterator range
+    void print_iterator (
+      std::ostream& out, const_iterator beg, const_iterator end
+    ) const {
+      for (auto it = beg; it != end; ++it) {
+        if (it != beg) {
+          out << this->sep_;
+        }
+
+        out << this->align_ << *it;
+      }
     }
 
-    out << align << *it;
-  }
-}
+   public:
+    // Constructor
+    constexpr printer (
+      T const& cont, uintmax_t limit = 0,
+      std::string_view sep = ", ", std::string_view align = "",
+      std::string_view border = "", std::string_view open = "",
+      std::string_view close = ""
+    ) : cont_{ cont }, limit_{ limit },
+        sep_{ sep }, align_{ align }, border_{ border },
+        open_{ open }, close_{ close } {}
 
-////////////////////////////////////////////////////////////////////////////////
+    // Main print function
+    std::ostream& print (std::ostream& out) const {
+      out << this->open_;
 
-template <typename T>
-class print_container {
-  T const& cont;
-  uintmax_t limit_;
-  std::string_view sep_, align_, border_, open_, close_;
+      // Avoid printing borders when container is empty
+      if (!this->empty()) {
+        out << this->border_;
 
-  template <typename U>
-  friend std::ostream& operator << (std::ostream&, print_container<U> const&);
+        // Test if it can print the whole container
+        if (this->limit_ != 0 and this->size() > this->limit_) {
+          uintmax_t const pieces = this->limit_ >> 1;
 
- public:
-  constexpr print_container (
-    T const& cont, uintmax_t limit = 0,
-    std::string_view sep = ", ", std::string_view align = "",
-    std::string_view border = "", std::string_view open = "",
-    std::string_view close = ""
-  ) : cont{ cont }, limit_{ limit },
-      sep_{ sep }, align_{ align }, border_{ border },
-      open_{ open }, close_{ close } {}
+          // Break the container in two and print
+          auto stop_it = std::next(this->begin(), pieces);
+          auto rest_it = std::next(this->begin(), this->size() - pieces);
 
-  constexpr print_container& sep (std::string_view sep) {
-    this->sep_ = sep;
-    return *this;
-  }
+          print_iterator(out, this->begin(), stop_it);
+          out << this->sep_ << this->align_ << "..." << this->sep_;
+          print_iterator(out, rest_it, this->end());
 
-  constexpr print_container& align (std::string_view align) {
-    this->align_ = align;
-    return *this;
-  }
+        } else {
+          // Print the whole container
+          print_iterator(out, this->begin(), this->end());
+        }
 
-  constexpr print_container& border (std::string_view border) {
-    this->border_ = border;
-    return *this;
-  }
+        out << this->border_;
+      }
 
-  constexpr print_container& open (std::string_view open) {
-    this->open_ = open;
-    return *this;
-  }
-
-  constexpr print_container& close (std::string_view close) {
-    this->close_ = close;
-    return *this;
-  }
-
-  constexpr print_container& limit (uintmax_t limit) {
-    this->limit_ = limit;
-    return *this;
-  }
-};
-
-template <typename T>
-std::ostream& operator << (std::ostream& out, print_container<T> const& pc) {
-  out << pc.open_;
-
-  if (!pc.cont.empty()) {
-    out << pc.border_;
-
-    if (pc.limit_ != 0 and pc.cont.size() > pc.limit_) {
-      uintmax_t const pieces = pc.limit_ >> 1;
-      auto stop_it = pc.cont.begin(), rest_it = pc.cont.begin();
-
-      std::advance(stop_it, pieces);
-      std::advance(rest_it, pc.cont.size() - pieces);
-
-      print_iterator(out, pc.cont.begin(), stop_it, pc.sep_, pc.align_);
-      out << pc.sep_ << pc.align_ << "..." << pc.sep_;
-      print_iterator(out, rest_it, pc.cont.end(), pc.sep_, pc.align_);
-    } else {
-      print_iterator(out, pc.cont.begin(), pc.cont.end(), pc.sep_, pc.align_);
+      out << this->close_;
+      return out;
     }
 
-    out << pc.border_;
-  }
+    // Container's getters
+    const_iterator begin (void) const { return std::begin(this->cont_); }
+    const_iterator end (void) const { return std::end(this->cont_); }
+    uintmax_t size (void) const { return this->cont_.size(); }
+    bool empty (void) const { return this->cont_.empty(); }
 
-  out << pc.close_;
-  return out;
+    // Simple setters
+    constexpr printer& sep (std::string_view sep) {
+      this->sep_ = sep;
+      return *this;
+    }
+
+    constexpr printer& align (std::string_view align) {
+      this->align_ = align;
+      return *this;
+    }
+
+    constexpr printer& border (std::string_view border) {
+      this->border_ = border;
+      return *this;
+    }
+
+    constexpr printer& open (std::string_view open) {
+      this->open_ = open;
+      return *this;
+    }
+
+    constexpr printer& close (std::string_view close) {
+      this->close_ = close;
+      return *this;
+    }
+
+    constexpr printer& limit (uintmax_t limit) {
+      this->limit_ = limit;
+      return *this;
+    }
+  };
+
+  // Class to create a container based from begin and end pointers
+  template <
+    typename IT,
+    typename CIT = IT,
+    typename = std::enable_if_t<is_iterator_v<IT> and is_iterator_v<CIT>>
+  >
+  class container {
+
+  public:
+    using iterator = IT;
+    using const_iterator = CIT;
+    using reverse_iterator = std::reverse_iterator<iterator>;
+    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
+    using value_type = typename std::iterator_traits<iterator>::value_type;
+    using iterator_category = typename std::iterator_traits<iterator>::iterator_category;
+
+  private:
+    IT begin_, end_;
+
+  public:
+    // Constructor based on pointers
+    constexpr container (IT begin, IT end)
+      : begin_{ begin }, end_{ end } {};
+
+    // Constructor based on begin pointer and size
+    constexpr container (IT begin, uintmax_t size)
+      : container(begin, std::next(begin, size)) {};
+
+    // Container's getters
+    constexpr bool empty (void) const { return this->begin_ == this->end_; }
+
+    constexpr uintmax_t size (void) const {
+      return std::distance(this->begin_, this->end_);
+    }
+
+    std::enable_if_t<
+      std::is_same_v<iterator_category, std::random_access_iterator_tag>,
+      value_type const&
+    > operator [] (intmax_t idx) { return *(this->begin_ + idx); }
+
+    expand_all_iterators((void), iterator, const_iterator, this->begin_, this->end_, EMPTY_ARG, true);
+  };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template <typename IT, typename CIT = IT>
-class container {
+// printer's printer :)
 
-public:
-  using iterator = IT;
-  using const_iterator = CIT;
-  using reverse_iterator = std::reverse_iterator<iterator>;
-  using const_reverse_iterator = std::reverse_iterator<const_iterator>;
-
-  using value_type = typename std::iterator_traits<iterator>::value_type;
-  using iterator_category = typename std::iterator_traits<iterator>::iterator_category;
-
-private:
-  IT begin_, end_;
-
-public:
-  constexpr container (IT begin, IT end) : begin_{ begin }, end_{ end } {};
-
-  constexpr bool empty (void) const { return this->begin_ == this->end_; }
-
-  constexpr uintmax_t size (void) const {
-    return std::distance(this->begin_, this->end_);
-  }
-
-  std::enable_if_t<
-    std::is_same_v<iterator_category, std::random_access_iterator_tag>,
-    value_type const&
-  > operator [] (intmax_t idx) { return *(this->begin_ + idx); }
-
-  expand_all_iterators((void), iterator, const_iterator, this->begin_, this->end_, EMPTY_ARG, true);
-};
-
-template <
-  typename IT, typename CIT = IT,
-  typename = std::enable_if_t<is_iterator_v<IT> and is_iterator_v<CIT>>
->
-constexpr container<IT, CIT> make_container (IT beg, IT end) {
-  return container<IT, CIT>(beg, end);
+template <typename T>
+std::ostream& operator << (std::ostream& out, util::printer<T> const& pc) {
+  return pc.print(out);
 }
 
-template <
-  typename IT, typename CIT = IT,
-  typename = std::enable_if_t<std::is_pointer_v<IT>, container<IT, CIT>>
->
-constexpr container<IT, CIT> make_container (IT ptr, uintmax_t size) {
-  return container<IT, CIT>(ptr, ptr + size);
+// Helper functions for known containers
+
+template <typename IT>
+std::ostream& operator << (std::ostream& out, util::container<IT> const& con) {
+  return out << util::printer(con, 20, ", ", "", " ", "[", "]");
 }
 
-////////////////////////////////////////////////////////////////////////////////
+template <typename T>
+std::ostream& operator << (std::ostream& out, std::vector<T> const& vec) {
+  return out << util::printer(vec, 20, ", ", "", " ", "[", "]");
+}
 
+template <typename T>
+std::ostream& operator << (std::ostream& out, std::deque<T> const& vec) {
+  return out << util::printer(vec, 20, ", ", "", " ", "[", "]");
+}
+
+template <typename T, uintmax_t N>
+std::ostream& operator << (std::ostream& out, std::array<T, N> const& arr) {
+  return out << util::printer(arr, 20, ", ", "", " ", "[", "]");
+}
+
+template <typename T>
+std::ostream& operator << (std::ostream& out, std::list<T> const& lst) {
+  return out << util::printer(lst, 20, ", ", "", " ", "[", "]");
+}
+
+template <typename T>
+std::ostream& operator << (std::ostream& out, std::set<T> const& set) {
+  return out << util::printer(set, 20, ", ", "", " ", "{", "}");
+}
+
+template <typename T>
+std::ostream& operator << (std::ostream& out, std::unordered_set<T> const& set) {
+  return out << util::printer(set, 20, ", ", "", " ", "{", "}");
+}
+
+// Required to print maps
 template <typename T, typename U>
 std::ostream& operator << (std::ostream& out, std::pair<T, U> const& p) {
   return out << "( " << p.first << " , " << p.second << " )";
 }
 
-template <typename IT>
-std::ostream& operator << (std::ostream& out, container<IT> const& cont) {
-  return out << print_container(
-    cont, default_max_print, default_sep, default_align,
-    default_border, default_open, default_close
-  );
-}
-
-template <typename T>
-std::ostream& operator << (std::ostream& out, std::vector<T> const& vec) {
-  return out << print_container(
-    vec, vector_max_print, vector_sep, vector_align,
-    vector_border, vector_open, vector_close
-  );
-}
-
-template <typename T, uintmax_t N>
-std::ostream& operator << (std::ostream& out, std::array<T, N> const& arr) {
-  return out << print_container(
-    arr, vector_max_print, vector_sep, vector_align,
-    vector_border, vector_open, vector_close
-  );
-}
-
-template <typename T>
-std::ostream& operator << (std::ostream& out, std::list<T> const& lst) {
-  return out << print_container(
-    lst, vector_max_print, vector_sep, vector_align,
-    vector_border, vector_open, vector_close
-  );
+template <typename K, typename V>
+std::ostream& operator << (std::ostream& out, std::unordered_map<K, V> const& map) {
+  return out << util::printer(map, 20, "\n", "\t", "\n", "{", "}");
 }
 
 template <typename K, typename V>
-std::ostream& operator << (std::ostream& out, std::unordered_map<K, V> const& map) {
-  return out << print_container(
-    map, map_max_print, map_sep, map_align,
-    map_border, map_open, map_close
-  );
+std::ostream& operator << (std::ostream& out, std::map<K, V> const& map) {
+  return out << util::printer(map, 20, "\n", "\t", "\n", "{", "}");
 }

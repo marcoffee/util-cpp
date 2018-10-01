@@ -1,12 +1,9 @@
 #pragma once
 
-#include <signal.h>
-
 namespace util::interrupt {
 
+  // Tries to simulate python's KeyboardInterrupt
   extern volatile bool killed;
-
-  void handler (int);
   void enable (void);
 
 };

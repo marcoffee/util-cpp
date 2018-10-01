@@ -7,6 +7,7 @@ namespace util::pointer {
 
   template <typename T>
   T* duplicate (T const* ptr, uintmax_t size) {
+    // Duplicate a pointer, given its size
     T* copy = nullptr;
 
     if (ptr != nullptr and size != 0) {

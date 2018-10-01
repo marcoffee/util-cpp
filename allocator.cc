@@ -6,11 +6,13 @@ namespace util::allocator {
 
   static std::atomic_uintmax_t _peak = 0, _total = 0, _freed = 0;
 
+  // Adds to total memory allocated
   void add_memory (uintmax_t const size) {
     _total += size;
     util::atomic::max(_peak, now());
   }
 
+  // Adds to total memory freed
   void free_memory (uintmax_t const size) {
     _freed += size;
   }

@@ -2,32 +2,34 @@
 
 #include <iterator>
 
+// An empty macro argument
 #define EMPTY_ARG
+
+// A comma for macro expansion
 #define COMMA ,
 
 #ifndef RST_LINE
+  // Clear terminal line
   #define RST_LINE "\r\033[K"
 #endif
 
 #ifndef WHITESPACE
+  // Whitespace characters
   #define WHITESPACE " \f\n\r\t\v"
 #endif
 
+// Convert parameter to string
 #define STRINGIFY(x) #x
 #define TO_STRING(x) STRINGIFY(x)
 
+// Expands to omp pragma if available
 #ifdef _OPENMP
   #define IF_OMP(v) _Pragma(TO_STRING(omp v))
 #else
   #define IF_OMP(v)
 #endif
 
-#if __cpp_if_constexpr >= 201606
-  #define if_static(x) if constexpr(x)
-#else
-  #define if_static(x) if (x)
-#endif
-
+// Repeats an action inside a loop
 #define do_every(start, every, max, at) \
 if ((every) != 0 and ( \
   ((at) == (start)) or \
@@ -35,6 +37,7 @@ if ((every) != 0 and ( \
   (((at) % (every)) == 0) \
 ))
 
+// Ternary operators
 #define macro_ternary_(t, f) f
 #define macro_ternary_0(t, f) f
 #define macro_ternary_false(t, f) f
@@ -42,6 +45,7 @@ if ((every) != 0 and ( \
 #define macro_ternary_true(t, f) t
 #define macro_ternary(cond, t, f) macro_ternary_ ## cond (t, f)
 
+// Auto create iterators
 #define expand_mutable_iterators(param, it, _b, _e, suf, ce) \
   macro_ternary(ce, constexpr, inline) it suf ## begin param { return (_b); } \
   macro_ternary(ce, constexpr, inline) it suf ## end param { return (_e); }
@@ -82,6 +86,7 @@ if ((every) != 0 and ( \
   expand_const_iterators(param, cit, _b, _e, suf, ce) \
   expand_const_reverse_iterators(param, cit, _b, _e, suf, ce)
 
+// Time logging functions
 #define time_start(tid) \
   auto __time_ ## tid = std::chrono::high_resolution_clock::now()
 

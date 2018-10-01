@@ -8,6 +8,7 @@
 namespace util {
   constexpr double PI = 3.141592653589793238463;
 
+  // Tests if a type is a specialization of a template
   template <typename T, template <typename...> typename TMPL>
   struct is_specialization_of : std::false_type {};
 
@@ -19,6 +20,7 @@ namespace util {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+  // Create static array (similar to experimental::make_array)
   template <typename T, T... sigs>
   struct make_array_st {
     constexpr static std::array<T, sizeof...(sigs)> const value{ sigs... };
@@ -28,6 +30,7 @@ namespace util {
   constexpr auto const& make_array{ make_array_st<T, sigs...>::value };
 };
 
+// log2 at compile time
 template <uintmax_t N>
 struct static_log2 {
   constexpr static uintmax_t value = static_log2<(N >> 1)>::value + 1;
@@ -43,6 +46,7 @@ constexpr uintmax_t static_log2_v = static_log2<N>::value;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Count bits of an integer type
 template <
   typename T,
   typename = typename std::enable_if_t<std::is_integral<T>::value>
@@ -57,6 +61,7 @@ constexpr uintmax_t count_bits_v = count_bits<T>::value;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Repeat a pattern of bits on a bitmask
 template <typename T, T patt, uintmax_t size, uintmax_t pos = 0, uintmax_t avai = count_bits_v<T>>
 struct bitwise_repeat {
   static constexpr T value = bitwise_repeat<T, patt, size, pos + size, (avai > size) ? (avai - size) : 0>::value | (patt << pos);
@@ -72,6 +77,7 @@ constexpr T bitwise_repeat_v = bitwise_repeat<T, patt, size>::value;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Create bit patterns meant to be used in popcount
 template <typename T, uintmax_t pos, bool less>
 struct make_pattern {
 private:
@@ -107,6 +113,7 @@ constexpr T make_pattern_v = make_pattern<T, pos, less>::value;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Create an array of bit patterns meant to be used in popcount
 template <typename T, uintmax_t pos, bool less, T... vals>
 struct make_pattern_array : make_pattern_array<
   T, pos - 1, less, vals..., make_pattern_v<T, pos - 1, less>
@@ -132,11 +139,7 @@ constexpr std::array<T, static_log2_v<count_bits_v<T>>>
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template <typename T>
-static T defref;
-
-////////////////////////////////////////////////////////////////////////////////
-
+// Counts the number of set bits on a bitmask
 template <
   typename T, uintmax_t i = 0,
   typename = typename std::enable_if_t<std::is_integral_v<T>>
@@ -155,6 +158,13 @@ constexpr T popcount (T n) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Type for default reference parameters on functions
+template <typename T>
+static T defref;
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Tests if a type is an iterator
 template <typename T>
 struct is_iterator {
   static constexpr bool
@@ -166,17 +176,7 @@ constexpr bool is_iterator_v = is_iterator<T>::value;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template <typename R>
-struct as_call { using type = R(); };
-
-template <typename R, typename... ARGS>
-struct as_call<R(ARGS...)> { using type = R(ARGS...); };
-
-template <typename R>
-using as_call_t = typename as_call<R>::type;
-
-////////////////////////////////////////////////////////////////////////////////
-
+// Change an argument from the variadic template list
 template <uintmax_t, uintmax_t, typename, typename...>
 struct _change_arg {};
 
@@ -208,6 +208,7 @@ using change_arg_t = typename change_arg<P, C, ARGS...>::type;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Build a std::function from the templates
 template <typename, typename>
 struct build_function {};
 
@@ -221,6 +222,7 @@ using build_function_t = typename build_function<R, ARGS...>::type;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Some traits for std::function
 template <typename>
 struct _function_traits {
   static constexpr bool is_function = false;
@@ -230,20 +232,28 @@ template <typename R, typename... ARGS>
 struct _function_traits<std::function<R(ARGS...)>> {
 
   static constexpr bool is_function = true;
+
+  // Header type
   using header = R(ARGS...);
+  // Return type
   using ret_type = R;
+  // Arguments as a tuple
   using as_tuple = std::tuple<ARGS...>;
 
+  // Number of arguments
   static const size_t count_args = sizeof...(ARGS);
 
+  // Type of an argument
   template <size_t N>
   using arg_type = typename std::tuple_element<N, as_tuple>::type;
 
+  // Change return type
   template <typename NR>
   struct ret_rebind {
     using type = std::function<NR(ARGS...)>;
   };
 
+  // Change argument type
   template <size_t N, typename NA>
   using arg_rebind = build_function_t<R, change_arg_t<N, NA, ARGS...>>;
 
@@ -260,6 +270,7 @@ using function_ret_rebind = typename function_traits<F>::template ret_rebind<NR>
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// No operation function
 template <typename>
 struct _noop {};
 

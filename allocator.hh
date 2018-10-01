@@ -33,13 +33,17 @@ namespace util::allocator {
 
     template <typename... ARGS>
     [[nodiscard]] T* allocate (std::size_t n, ARGS&&... args) {
+      // Log allocation
       add_memory(n * sizeof(T));
+      // Calls base allocator
       return this->_alloc.allocate(n, std::forward<ARGS>(args)...);
     }
 
     template <typename... ARGS>
     void deallocate (T* p, std::size_t n, ARGS&&... args) {
+      // Log deallocation
       free_memory(n * sizeof(T));
+      // Calls base deallocator
       this->_alloc.deallocate(p, n, std::forward<ARGS>(args)...);
     }
 

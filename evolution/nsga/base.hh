@@ -18,19 +18,19 @@ namespace __EVO_NAMESPACE {
     using const_dis_iterator = dis_t const*;
 
    protected:
-    siz_t _popsize;
-    siz_t _children;
-    siz_t _fronts;
-    siz_t *_fro;
-    dis_t *_dis;
+    siz_t popsize_;
+    siz_t children_;
+    siz_t fronts_;
+    siz_t *fro_;
+    dis_t *dis_;
 
     void alloc (bool parent) override {
       if (parent) {
         this->evo_t::alloc(true);
       }
 
-      this->_fro = new siz_t[this->max_size()];
-      this->_dis = new dis_t[this->max_size()];
+      this->fro_ = new siz_t[this->max_size()];
+      this->dis_ = new dis_t[this->max_size()];
     }
 
     void release (bool parent) override {
@@ -38,8 +38,8 @@ namespace __EVO_NAMESPACE {
         this->evo_t::release(true);
       }
 
-      this->_fro = nullptr;
-      this->_dis = nullptr;
+      this->fro_ = nullptr;
+      this->dis_ = nullptr;
     }
 
     void free (bool parent) override {
@@ -47,8 +47,8 @@ namespace __EVO_NAMESPACE {
         this->evo_t::free(true);
       }
 
-      delete[] this->_fro;
-      delete[] this->_dis;
+      delete[] this->fro_;
+      delete[] this->dis_;
       this->release(false);
     }
 
@@ -57,9 +57,9 @@ namespace __EVO_NAMESPACE {
         this->evo_t::copy_meta(ot, true);
       }
 
-      this->_popsize = ot._popsize;
-      this->_children = ot._children;
-      this->_fronts = ot._fronts;
+      this->popsize_ = ot.popsize_;
+      this->children_ = ot.children_;
+      this->fronts_ = ot.fronts_;
     }
 
     nsga& copy_from (nsga const& ot, bool parent) {
@@ -75,8 +75,8 @@ namespace __EVO_NAMESPACE {
         this->alloc(false);
       }
 
-      std::copy(ot._fro, ot._fro + ot.max_size(), this->_fro);
-      std::copy(ot._dis, ot._dis + ot.max_size(), this->_dis);
+      std::copy(ot.fro_, ot.fro_ + ot.max_size(), this->fro_);
+      std::copy(ot.dis_, ot.dis_ + ot.max_size(), this->dis_);
 
       return *this;
     }
@@ -89,8 +89,8 @@ namespace __EVO_NAMESPACE {
       this->free(false);
       this->copy_meta(ot, false);
 
-      this->_fro = std::move(ot._fro);
-      this->_dis = std::move(ot._dis);
+      this->fro_ = std::move(ot.fro_);
+      this->dis_ = std::move(ot.dis_);
       ot.release(true);
 
       return *this;
@@ -241,13 +241,13 @@ namespace __EVO_NAMESPACE {
       siz_t* ranked = new siz_t[all];
       siz_t* ends = new siz_t[all];
 
-      siz_t const fronts = this->nd_sorting(fit, this->_fro, ranked, ends, all, this->popsize());
+      siz_t const fronts = this->nd_sorting(fit, this->fro_, ranked, ends, all, this->popsize());
       siz_t const found = ends[fronts - 1];
 
-      this->_fronts = fronts;
+      this->fronts_ = fronts;
 
       for (siz_t i = 0, start = 0; i < fronts; start = ends[i], ++i) {
-        this->cd_sorting(fit, this->_dis, ranked + start, ends[i] - start);
+        this->cd_sorting(fit, this->dis_, ranked + start, ends[i] - start);
       }
 
       if (found > this->popsize()) {
@@ -260,7 +260,7 @@ namespace __EVO_NAMESPACE {
       }
 
       util::iterator::multiorder(
-        ranked, ranked + all, this->popsize(), chr, fit, this->_dis, this->_fro
+        ranked, ranked + all, this->popsize(), chr, fit, this->dis_, this->fro_
       );
 
       delete[] ends;
@@ -275,26 +275,31 @@ namespace __EVO_NAMESPACE {
    public:
 
     nsga (siz_t popsize, siz_t children, siz_t dimensions, siz_t seed)
-      : evo_t(dimensions, popsize + children, seed),
-        _popsize(popsize), _children(children) { this->alloc(false); }
+    : evo_t{ dimensions, popsize + children, seed },
+      popsize_{ popsize }, children_{ children } { this->alloc(false); }
 
     nsga (siz_t popsize, siz_t dimensions, siz_t seed)
-      : nsga(popsize, popsize, dimensions, seed) {}
+    : nsga{ popsize, popsize, dimensions, seed } {}
 
-    nsga (nsga const& ot) : __EVO_BASE(ot) { this->copy_from(ot, false); }
-    nsga (nsga&& ot) : __EVO_BASE(std::move(ot)) { this->move_from(ot, false); }
+    nsga (nsga const& ot) : __EVO_BASE{ ot } {
+      this->copy_from(ot, false);
+    }
+
+    nsga (nsga&& ot) : __EVO_BASE{ std::move(ot) } {
+      this->move_from(ot, false);
+    }
 
     nsga& operator = (nsga const& ot) { return this->copy_from(ot, true); }
     nsga& operator = (nsga&& ot) { return this->move_from(ot, true); }
 
     evo_t* copy (void) const override { return new nsga(*this); }
 
-    siz_t popsize (void) const { return this->_popsize; }
-    siz_t children (void) const { return this->_children; }
-    siz_t fronts (void) const { return this->_fronts; }
+    siz_t popsize (void) const { return this->popsize_; }
+    siz_t children (void) const { return this->children_; }
+    siz_t fronts (void) const { return this->fronts_; }
 
-    siz_t front_at (siz_t pos) const { return this->_fro[pos]; }
-    dis_t distance_at (siz_t pos) const { return this->_dis[pos]; }
+    siz_t front_at (siz_t pos) const { return this->fro_[pos]; }
+    dis_t distance_at (siz_t pos) const { return this->dis_[pos]; }
 
     bool crowding_compare (dis_t da, dis_t db) const { return da > db; }
 
@@ -343,8 +348,8 @@ namespace __EVO_NAMESPACE {
       };
     }
 
-    expand_all_const_iterators((void), const_fro_iterator, this->_fro, this->_fro + this->size(), fro, false);
-    expand_all_const_iterators((void), const_dis_iterator, this->_dis, this->_dis + this->size(), dis, false);
+    expand_all_const_iterators((void), const_fro_iterator, this->fro_, this->fro_ + this->size(), fro, false);
+    expand_all_const_iterators((void), const_dis_iterator, this->dis_, this->dis_ + this->size(), dis, false);
   };
 
 };

@@ -4,21 +4,21 @@
 
 namespace util::allocator {
 
-  static std::atomic_uintmax_t _peak = 0, _total = 0, _freed = 0;
+  static std::atomic_uintmax_t peak_ = 0, total_ = 0, freed_ = 0;
 
   // Adds to total memory allocated
   void add_memory (uintmax_t const size) {
-    _total += size;
-    util::atomic::max(_peak, now());
+    total_ += size;
+    util::atomic::max(peak_, now());
   }
 
   // Adds to total memory freed
   void free_memory (uintmax_t const size) {
-    _freed += size;
+    freed_ += size;
   }
 
-  uintmax_t peak (void) { return _peak.load(std::memory_order_relaxed); }
-  uintmax_t total (void) { return _total.load(std::memory_order_relaxed); }
-  uintmax_t freed (void) { return _freed.load(std::memory_order_relaxed); }
+  uintmax_t peak (void) { return peak_.load(std::memory_order_relaxed); }
+  uintmax_t total (void) { return total_.load(std::memory_order_relaxed); }
+  uintmax_t freed (void) { return freed_.load(std::memory_order_relaxed); }
   uintmax_t now (void) { return total() - freed(); }
 }

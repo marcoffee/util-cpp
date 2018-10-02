@@ -11,28 +11,28 @@ namespace __EVO_NAMESPACE {
     __EVO_USING_FUNCTIONS;
 
    private:
-    rnd_t _rnd;
-    siz_t _size = 0;
-    evo_t** _world = nullptr;
+    rnd_t rnd_;
+    siz_t size_ = 0;
+    evo_t** world_ = nullptr;
 
-    void alloc (bool) { this->_world = new evo_t*[this->size()](); }
-    void release (bool) { this->_size = 0; this->_world = nullptr; }
+    void alloc (bool) { this->world_ = new evo_t*[this->size()](); }
+    void release (bool) { this->size_ = 0; this->world_ = nullptr; }
 
     void free (bool) {
-      if (this->_world == nullptr) {
+      if (this->world_ == nullptr) {
         return;
       }
 
       for (siz_t i = 0; i < this->size(); ++i) {
-        delete this->_world[i];
+        delete this->world_[i];
       }
 
-      delete[] this->_world;
+      delete[] this->world_;
       this->release(false);
     }
 
     void copy_meta (islands const& ot, bool) {
-      this->_size = ot._size;
+      this->size_ = ot.size_;
     }
 
     islands& copy_from (islands const& ot, bool) {
@@ -49,25 +49,25 @@ namespace __EVO_NAMESPACE {
       }
 
       for (siz_t i = 0; i < this->size(); ++i) {
-        if (ot._world[i] != nullptr) {
-          this->_world[i] = ot._world[i]->copy();
+        if (ot.world_[i] != nullptr) {
+          this->world_[i] = ot.world_[i]->copy();
         }
       }
 
-      this->_rnd = ot._rnd;
+      this->rnd_ = ot.rnd_;
     }
 
     islands& move_from (islands&& ot) {
       this->free();
       this->copy_meta(ot, false);
-      this->_world = ot._world;
-      this->_rnd = std::move(ot._rnd);
+      this->world_ = ot.world_;
+      this->rnd_ = std::move(ot.rnd_);
       ot.release(false);
     }
 
    public:
     explicit islands (siz_t size, siz_t seed = 0)
-    : _rnd(seed), _size(size) { this->alloc(false); }
+    : rnd_{ seed }, size_{ size } { this->alloc(false); }
 
     islands (islands const& ot) { this->copy_from(ot, false); }
     islands (islands&& ot) { this->move_from(std::move(ot), false); }
@@ -80,7 +80,7 @@ namespace __EVO_NAMESPACE {
       return this->move_from(std::move(ot), false);
     }
 
-    inline rnd_t& random (void) { return this->_rnd; }
+    inline rnd_t& random (void) { return this->rnd_; }
 
     template <
       typename EVO,
@@ -88,14 +88,14 @@ namespace __EVO_NAMESPACE {
       typename = std::enable_if_t<std::is_base_of_v<evo_t, EVO>>
     >
     void emplace_at (siz_t i, ARGS&&... args) {
-      delete this->_world[i];
-      this->_world[i] = new EVO(std::forward<ARGS>(args)...);
+      delete this->world_[i];
+      this->world_[i] = new EVO(std::forward<ARGS>(args)...);
     }
 
     void step (bool parallel = true) {
       IF_OMP(parallel for schedule(static) if(parallel))
       for (siz_t i = 0; i < this->size(); ++i) {
-        this->_world[i]->step();
+        this->world_[i]->step();
       }
     }
 
@@ -155,7 +155,7 @@ namespace __EVO_NAMESPACE {
       delete[] fit;
     }
 
-    siz_t size (void) const { return this->_size; }
+    siz_t size (void) const { return this->size_; }
 
     template <
       typename EVO = evo_t,
@@ -164,10 +164,10 @@ namespace __EVO_NAMESPACE {
     >
     EVO& world (siz_t i) {
       if constexpr (std::is_same_v<EVO, evo_t>) {
-        return *this->_world[i];
+        return *this->world_[i];
       }
 
-      return *dynamic_cast<EVO*>(this->_world[i]);
+      return *dynamic_cast<EVO*>(this->world_[i]);
     }
 
     template <
@@ -176,10 +176,10 @@ namespace __EVO_NAMESPACE {
     >
     EVO const& world (siz_t i) const {
       if constexpr (std::is_same_v<EVO, evo_t>) {
-        return *this->_world[i];
+        return *this->world_[i];
       }
 
-      return *dynamic_cast<EVO const*>(this->_world[i]);
+      return *dynamic_cast<EVO const*>(this->world_[i]);
     }
 
     evo_t& operator [] (siz_t i) { return this->world(i); }

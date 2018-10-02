@@ -24,7 +24,7 @@ namespace util::iterator {
     using index = std::array<uintmax_t, D>;
 
    private:
-    index _size, _idx;
+    index size_, idx_;
 
    public:
     constexpr static uintmax_t absolute_pos (index const& size, index const& idx);
@@ -32,21 +32,21 @@ namespace util::iterator {
 
     constexpr ndimensional (
       index const& size, index const& idx = { 0, 0 }
-    ) : _size(size), _idx(idx) {};
+    ) : size_{ size }, idx_{ idx } {};
 
     constexpr uintmax_t const absolute_pos (void) const {
-      return ndimensional::absolute_pos(this->_size, this->_idx);
+      return ndimensional::absolute_pos(this->size_, this->idx_);
     }
 
     virtual reference get (index const& idx) const = 0;
-    uintmax_t const& idx (uintmax_t dim) const { return this->_idx[dim]; }
+    uintmax_t const& idx (uintmax_t dim) const { return this->idx_[dim]; }
 
     constexpr bool operator == (ndimensional const& ot) const;
     constexpr bool operator != (ndimensional const& ot) const {
       return !(*this == ot);
     }
 
-    constexpr reference operator * (void) const { return this->get(this->_idx); }
+    constexpr reference operator * (void) const { return this->get(this->idx_); }
 
     constexpr T& operator ++ (void);
     constexpr T& operator -- (void);
@@ -117,7 +117,7 @@ namespace util::iterator {
 
   __NDIM_IT_FUNC(constexpr bool)::operator == (__NDIM_IT const& ot) const {
     for (uintmax_t i = 0; i < D; ++i) {
-      if (this->_idx[i] != ot._idx[i] or this->_size[i] != ot._size[i]) {
+      if (this->idx_[i] != ot.idx_[i] or this->size_[i] != ot.size_[i]) {
         return false;
       }
     }
@@ -129,11 +129,11 @@ namespace util::iterator {
     for (uintmax_t dim = D; dim > 0; --dim) {
       uintmax_t d = dim - 1;
 
-      if (++this->_idx[d] != this->_size[d] or d == 0) {
+      if (++this->idx_[d] != this->size_[d] or d == 0) {
         break;
       }
 
-      this->_idx[d] = 0;
+      this->idx_[d] = 0;
     }
 
     return static_cast<T&>(*this);
@@ -143,12 +143,12 @@ namespace util::iterator {
     for (uintmax_t dim = D; dim > 0; --dim) {
       uintmax_t d = dim - 1;
 
-      if (this->_idx[d] != 0) {
-        this->_idx[d]--;
+      if (this->idx_[d] != 0) {
+        this->idx_[d]--;
         break;
       }
 
-      this->_idx[d] = this->_size[d] - 1;
+      this->idx_[d] = this->size_[d] - 1;
     }
 
     return static_cast<T&>(*this);
@@ -162,7 +162,7 @@ namespace util::iterator {
       uintmax_t const udiff = diff;
       uintmax_t pos = this->absolute_pos();
       pos = (udiff > pos) ? 0 : pos - udiff;
-      __NDIM_IT::relative_pos(pos, this->_size, this->_idx);
+      __NDIM_IT::relative_pos(pos, this->size_, this->idx_);
     }
     return static_cast<T&>(*this);
   }
@@ -173,7 +173,7 @@ namespace util::iterator {
 
     } else if (diff > 0) {
       uintmax_t const pos = this->absolute_pos() + diff;
-      __NDIM_IT::relative_pos(pos, this->_size, this->_idx);
+      __NDIM_IT::relative_pos(pos, this->size_, this->idx_);
     }
 
     return static_cast<T&>(*this);
@@ -181,7 +181,7 @@ namespace util::iterator {
 
   __NDIM_IT_FUNC(constexpr bool)::operator > (__NDIM_IT const& ot) const {
     for (uintmax_t i = 0; i < D; ++i) {
-      if (this->_idx[i] > ot._idx[i] or this->_size[i] > ot._size[i]) {
+      if (this->idx_[i] > ot.idx_[i] or this->size_[i] > ot.size_[i]) {
         return true;
       }
     }
@@ -191,7 +191,7 @@ namespace util::iterator {
 
   __NDIM_IT_FUNC(constexpr bool)::operator < (__NDIM_IT const& ot) const {
     for (uintmax_t i = 0; i < D; ++i) {
-      if (this->_idx[i] < ot._idx[i] or this->_size[i] < ot._size[i]) {
+      if (this->idx_[i] < ot.idx_[i] or this->size_[i] < ot.size_[i]) {
         return true;
       }
     }

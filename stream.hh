@@ -27,7 +27,7 @@ extern null_buffer<char> null_buff;
 template <typename CharT = char>
 class null_ostream : public std::basic_ostream<CharT> {
  public:
-  null_ostream (void) : std::basic_ostream<CharT>(&null_buff) {}
+  null_ostream (void) : std::basic_ostream<CharT>{ &null_buff } {}
   null_buffer<CharT>* rdbuf (void) const { return &null_buff; }
 };
 

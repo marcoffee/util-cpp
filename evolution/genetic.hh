@@ -11,8 +11,8 @@ namespace __EVO_NAMESPACE {
     __EVO_USING_FUNCTIONS;
 
    protected:
-    siz_t _popsize;
-    siz_t _elitism = 1;
+    siz_t popsize_;
+    siz_t elitism_ = 1;
 
     siz_t initialize (chr_t* chr, fit_t* fit, siz_t) override {
       return this->evo_t::initialize(chr, fit, this->popsize());
@@ -35,14 +35,14 @@ namespace __EVO_NAMESPACE {
 
    public:
     genetic (siz_t size, sed_t seed = 0)
-      : evo_t(size + size, seed), _popsize(size) {}
+    : evo_t{ size + size, seed }, popsize_{ size } {}
 
     evo_t* copy (void) const { return new gen_t(*this); }
 
-    siz_t popsize (void) const { return this->_popsize; }
+    siz_t popsize (void) const { return this->popsize_; }
 
-    siz_t elitism (void) const { return this->_elitism; }
-    siz_t& elitism (void) { return this->_elitism; }
+    siz_t elitism (void) const { return this->elitism_; }
+    siz_t& elitism (void) { return this->elitism_; }
   };
 
 };

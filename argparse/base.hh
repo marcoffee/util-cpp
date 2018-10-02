@@ -26,36 +26,36 @@ namespace util {
     class params;
 
     class option {
-      uint8_t _value;
+      uint8_t value_;
 
      public:
       static constexpr uint8_t
         none = 0b00000U, required = 0b00001U, multiple = 0b00010U,
         enabler = 0b00100U, disabler = 0b01000U, counter = 0b10000U;
 
-      constexpr option (uint8_t value = none) : _value(value) {};
+      constexpr option (uint8_t value = none) : value_{ value } {};
 
-      constexpr bool is_required (void) const { return this->_value & required; }
-      constexpr bool is_multiple (void) const { return this->_value & multiple; }
-      constexpr bool is_enabler (void) const { return this->_value & enabler; }
-      constexpr bool is_disabler (void) const { return this->_value & disabler; }
-      constexpr bool is_counter (void) const { return this->_value & counter; }
+      constexpr bool is_required (void) const { return this->value_ & required; }
+      constexpr bool is_multiple (void) const { return this->value_ & multiple; }
+      constexpr bool is_enabler (void) const { return this->value_ & enabler; }
+      constexpr bool is_disabler (void) const { return this->value_ & disabler; }
+      constexpr bool is_counter (void) const { return this->value_ & counter; }
 
-      constexpr option operator | (option const& ot) const { return this->_value | ot._value; }
-      constexpr option operator | (uint8_t const& ot) const { return this->_value | ot; }
+      constexpr option operator | (option const& ot) const { return this->value_ | ot.value_; }
+      constexpr option operator | (uint8_t const& ot) const { return this->value_ | ot; }
 
-      constexpr option& operator |= (option const& ot) { this->_value |= ot._value; return *this; }
-      constexpr option& operator |= (uint8_t const& ot) { this->_value |= ot; return *this; }
+      constexpr option& operator |= (option const& ot) { this->value_ |= ot.value_; return *this; }
+      constexpr option& operator |= (uint8_t const& ot) { this->value_ |= ot; return *this; }
     };
 
     static bool valid_name (std::string const& name);
 
    private:
-    string_map<option> _options;
-    string_mapset _choices;
-    string_map<std::string> _default;
-    string_set _non_default;
-    string_vector _positional;
+    string_map<option> options_;
+    string_mapset choices_;
+    string_map<std::string> default_;
+    string_set non_default_;
+    string_vector positional_;
 
     void assert_param_exists (std::string const& name) const;
     void assert_param_does_not_exists (std::string const& name) const;
@@ -86,7 +86,7 @@ namespace util {
     }
 
     inline bool exists (std::string const& name) const {
-      return this->_options.count(name);
+      return this->options_.count(name);
     }
 
     inline bool maybe_arg (std::string const& name) const {
@@ -105,33 +105,33 @@ namespace util {
     friend class argparse;
     static string_vector const empty_vector;
 
-    string_map<string_vector> _data;
-    string_map<bool> _set;
+    string_map<string_vector> data_;
+    string_map<bool> set_;
     using map_iterator = string_vector::const_iterator;
 
     template <typename T>
     class iterator
     : public std::iterator<std::bidirectional_iterator_tag, T const> {
 
-      map_iterator _real;
-      conversor<T> _convert;
+      map_iterator real_;
+      conversor<T> convert_;
 
      public:
       iterator (void) {}
 
       iterator (map_iterator const real, conversor<T> const& convert)
-      : _real(real), _convert(convert) {}
+      : real_{ real }, convert_{ convert } {}
 
-      inline iterator& operator ++ (void) { ++this->_real; return *this; }
-      inline iterator& operator -- (void) { --this->_real; return *this; }
+      inline iterator& operator ++ (void) { ++this->real_; return *this; }
+      inline iterator& operator -- (void) { --this->real_; return *this; }
 
-      inline iterator operator ++ (int) { return iterator(this->_real++, this->_convert); }
-      inline iterator operator -- (int) { return iterator(this->_real--, this->_convert); }
+      inline iterator operator ++ (int) { return iterator(this->real_++, this->convert_); }
+      inline iterator operator -- (int) { return iterator(this->real_--, this->convert_); }
 
-      inline bool operator == (iterator const& ot) { return this->_real == ot._real; }
-      inline bool operator != (iterator const& ot) { return this->_real != ot._real; }
+      inline bool operator == (iterator const& ot) { return this->real_ == ot.real_; }
+      inline bool operator != (iterator const& ot) { return this->real_ != ot.real_; }
 
-      inline T const operator * (void) { return this->_convert(*this->_real); }
+      inline T const operator * (void) { return this->convert_(*this->real_); }
       inline T const operator -> (void) { return **this; }
 
     };
@@ -212,9 +212,9 @@ namespace util {
 
   template <typename T>
   bool argparse::params::get (std::string const& name, iterator<T>& beg, iterator<T>& end, conversor<T> const& convert) const {
-    auto it = this->_data.find(name);
+    auto it = this->data_.find(name);
 
-    if (it != this->_data.end()) {
+    if (it != this->data_.end()) {
       beg = iterator<T>(it->second.begin(), convert);
       end = iterator<T>(it->second.end(), convert);
       return true;

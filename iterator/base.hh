@@ -84,7 +84,7 @@ namespace util::iterator {
   void argfunction (
     IT beg, IT end, OIT out, ordfunc<OITT> const& order,
     cmpfunc<ITT> const& compare = std::less<ITT>(),
-    std::vector<IT> const& _iterators = {}
+    std::vector<IT> const& iterators_ = {}
   ) {
     if constexpr (std::is_same_v<ITC, std::random_access_iterator_tag>) {
       uintmax_t const size = std::distance(beg, end);
@@ -97,11 +97,11 @@ namespace util::iterator {
     } else {
       std::vector<IT> iters;
 
-      if (_iterators.empty()) {
+      if (iterators_.empty()) {
         iters = build_vector(beg, end);
       }
 
-      std::vector<IT> const& iterators = _iterators.empty() ? iters : _iterators;
+      std::vector<IT> const& iterators = iterators_.empty() ? iters : iterators_;
       uintmax_t const size = iterators.size();
       std::iota(out, out + size, 0);
 
@@ -119,9 +119,9 @@ namespace util::iterator {
   void argpartition (
     IT beg, IT end, OIT out, uintmax_t nth,
     cmpfunc<ITT> const& compare = std::less<ITT>(),
-    std::vector<IT> const& _iterators = {}
+    std::vector<IT> const& iterators_ = {}
   ) {
-    argfunction(beg, end, out, argfunc_partition(out, nth), compare, _iterators);
+    argfunction(beg, end, out, argfunc_partition(out, nth), compare, iterators_);
   }
 
   template <
@@ -132,9 +132,9 @@ namespace util::iterator {
   void argsort (
     IT beg, IT end, OIT out,
     cmpfunc<ITT> const& compare = std::less<ITT>(),
-    std::vector<IT> const& _iterators = {}
+    std::vector<IT> const& iterators_ = {}
   ) {
-    argfunction(beg, end, out, argfunc_sort(out), compare, _iterators);
+    argfunction(beg, end, out, argfunc_sort(out), compare, iterators_);
   }
 
   template <

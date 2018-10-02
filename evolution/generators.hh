@@ -61,21 +61,21 @@ namespace __EVO_NAMESPACE {
       }
 
    private:
-      mutator _mutate;
-      siz_t _cs;
-      index_comparator _cmp;
-      mutation_counter _count;
+      mutator mutate_;
+      siz_t cs_;
+      index_comparator cmp_;
+      mutation_counter count_;
 
    public:
       clonal (
         mutator const& mutate, siz_t cs, index_comparator const& cmp,
         mutation_counter const& count = ranking_count
-      ) : _mutate(mutate), _cs(cs), _cmp(cmp), _count(count) {}
+      ) : mutate_{ mutate }, cs_{ cs }, cmp_{ cmp }, count_{ count } {}
 
       clonal (
         mutator const& mutate, siz_t cs,
         mutation_counter const& count = ranking_count
-      ) : clonal(mutate, cs, nullptr, count) {}
+      ) : clonal{ mutate, cs, nullptr, count } {}
 
       chr_v operator () (evo_t& evo) {
         siz_t const size = evo.size();
@@ -83,24 +83,24 @@ namespace __EVO_NAMESPACE {
         siz_t *idx = new siz_t[size];
 
         std::iota(idx, idx + size, 0);
-        result.reserve(size * this->_cs);
+        result.reserve(size * this->cs_);
 
-        if (this->_cmp) {
-          std::stable_sort(idx, idx + size, this->_cmp);
+        if (this->cmp_) {
+          std::stable_sort(idx, idx + size, this->cmp_);
         }
 
         for (siz_t i = 0; i < size; ++i) {
           siz_t const pos = idx[i];
           siz_t const start = result.size();
-          siz_t const mutations = this->_count(evo, pos, i);
+          siz_t const mutations = this->count_(evo, pos, i);
 
-          std::fill_n(std::back_inserter(result), this->_cs, evo.chr_at(pos));
+          std::fill_n(std::back_inserter(result), this->cs_, evo.chr_at(pos));
 
-          for (siz_t j = 0; j < this->_cs; ++j) {
+          for (siz_t j = 0; j < this->cs_; ++j) {
             chr_t& chr = result[start + j];
 
             for (siz_t k = 0; k < mutations; ++k) {
-              chr = std::move(this->_mutate(evo, chr).front());
+              chr = std::move(this->mutate_(evo, chr).front());
             }
           }
         }

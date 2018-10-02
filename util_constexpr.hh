@@ -62,9 +62,14 @@ constexpr uintmax_t count_bits_v = count_bits<T>::value;
 ////////////////////////////////////////////////////////////////////////////////
 
 // Repeat a pattern of bits on a bitmask
-template <typename T, T patt, uintmax_t size, uintmax_t pos = 0, uintmax_t avai = count_bits_v<T>>
+template <
+  typename T, T patt, uintmax_t size,
+  uintmax_t pos = 0, uintmax_t avai = count_bits_v<T>
+>
 struct bitwise_repeat {
-  static constexpr T value = bitwise_repeat<T, patt, size, pos + size, (avai > size) ? (avai - size) : 0>::value | (patt << pos);
+  static constexpr T value = bitwise_repeat<
+    T, patt, size, pos + size, (avai > size) ? (avai - size) : 0
+  >::value | (patt << pos);
 };
 
 template <typename T, T patt, uintmax_t size, uintmax_t pos>
@@ -178,30 +183,31 @@ constexpr bool is_iterator_v = is_iterator<T>::value;
 
 // Change an argument from the variadic template list
 template <uintmax_t, uintmax_t, typename, typename...>
-struct _change_arg {};
+struct change_arg_st {};
 
 template <uintmax_t P, uintmax_t A, typename C, typename T, typename... NXT>
-struct _change_arg<P, A, C, T, NXT...> {
+struct change_arg_st<P, A, C, T, NXT...> {
 
   template <typename... DON>
-  struct _sub_change_arg : _change_arg<
+  struct sub_change_arg_st : change_arg_st<
     P, A + 1, C, NXT...
-  >::template _sub_change_arg<DON..., std::conditional_t<P == A, C, T>> {};
+  >::template sub_change_arg_st<DON..., std::conditional_t<P == A, C, T>> {};
 
 };
 
 template <uintmax_t A, uintmax_t P, typename C>
-struct _change_arg<P, A, C> {
+struct change_arg_st<P, A, C> {
 
   template <typename... DON>
-  struct _sub_change_arg {
+  struct sub_change_arg_st {
     using type = typename std::tuple<DON...>;
   };
 
 };
 
 template <uintmax_t P, typename C, typename... ARGS>
-struct change_arg : _change_arg<P, 0, C, ARGS...>::template _sub_change_arg<> {};
+struct change_arg : change_arg_st<P, 0, C, ARGS...>::template
+  sub_change_arg_st<> {};
 
 template <uintmax_t P, typename C, typename... ARGS>
 using change_arg_t = typename change_arg<P, C, ARGS...>::type;
@@ -224,12 +230,12 @@ using build_function_t = typename build_function<R, ARGS...>::type;
 
 // Some traits for std::function
 template <typename>
-struct _function_traits {
+struct function_traits_st {
   static constexpr bool is_function = false;
 };
 
 template <typename R, typename... ARGS>
-struct _function_traits<std::function<R(ARGS...)>> {
+struct function_traits_st<std::function<R(ARGS...)>> {
 
   static constexpr bool is_function = true;
 
@@ -260,46 +266,48 @@ struct _function_traits<std::function<R(ARGS...)>> {
 };
 
 template <typename F>
-struct function_traits : _function_traits<std::decay_t<F>> {};
+struct function_traits : function_traits_st<std::decay_t<F>> {};
 
 template <typename F, size_t N, typename NR>
-using function_arg_rebind = typename function_traits<F>::template arg_rebind<N, NR>;
+using function_arg_rebind = typename function_traits<F>::template
+  arg_rebind<N, NR>;
 
 template <typename F, typename NR>
-using function_ret_rebind = typename function_traits<F>::template ret_rebind<NR>;
+using function_ret_rebind = typename function_traits<F>::template
+  ret_rebind<NR>;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // No operation function
 template <typename>
-struct _noop {};
+struct noop_st {};
 
 template <>
-struct _noop<void()> {
+struct noop_st<void()> {
   static constexpr void value (void) {}
 };
 
 template <typename R, typename... ARGS>
-struct _noop<std::function<R(ARGS...)>> {
+struct noop_st<std::function<R(ARGS...)>> {
   static R const& value (ARGS&&...) { return defref<R>; }
 };
 
 template <typename... ARGS>
-struct _noop<std::function<void(ARGS...)>> {
+struct noop_st<std::function<void(ARGS...)>> {
   static void value (ARGS&&...) {}
 };
 
 template <typename R, typename... ARGS>
-struct _noop<R(ARGS...)> {
+struct noop_st<R(ARGS...)> {
   static R const& value (ARGS&&...) { return defref<R>; };
 };
 
 template <typename... ARGS>
-struct _noop<void(ARGS...)> { static constexpr void value (ARGS&&...) {}; };
+struct noop_st<void(ARGS...)> { static constexpr void value (ARGS&&...) {}; };
 
 template <typename T = void()>
-static const std::function<T> noop{ _noop<T>::value };
+static const std::function<T> noop{ noop_st<T>::value };
 
 template <typename R, typename... ARGS>
 static const std::function<R(ARGS...)>
-  noop<std::function<R(ARGS...)>> = _noop<std::function<R(ARGS...)>>::value;
+  noop<std::function<R(ARGS...)>> = noop_st<std::function<R(ARGS...)>>::value;

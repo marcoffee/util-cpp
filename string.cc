@@ -1,3 +1,3 @@
 #include "string.hh"
 
-std::string_view _ref_sv;
+std::string_view ref_sv;

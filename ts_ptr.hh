@@ -18,57 +18,58 @@ class ts_ptr {
   using type_ptr = type*;
 
  private:
-  Alloc _alloc;
-  uintmax_t _size = 0;
-  type_ptr _ptr = nullptr;
-  uintmax_t *_count = nullptr;
-  std::mutex *_mutex = nullptr;
+  Alloc alloc_;
+  uintmax_t size_ = 0;
+  type_ptr ptr_ = nullptr;
+  uintmax_t *count_ = nullptr;
+  std::mutex *mutex_ = nullptr;
 
   constexpr void init_storage (void) {
-    this->_count = new uintmax_t(1);
-    this->_mutex = new std::mutex();
+    this->count_ = new uintmax_t(1);
+    this->mutex_ = new std::mutex();
   }
 
   constexpr void free (void) {
-    this->_alloc.deallocate(this->_ptr, this->size());
+    this->alloc_.deallocate(this->ptr_, this->size());
 
-    delete this->_count;
+    delete this->count_;
 
-    this->_mutex->unlock();
-    delete this->_mutex;
+    this->mutex_->unlock();
+    delete this->mutex_;
   }
 
   constexpr void dec (void) {
-    if (this->_ptr != nullptr) {
-      this->_mutex->lock();
-      if (--(*this->_count) == 0) {
+    if (this->ptr_ != nullptr) {
+      this->mutex_->lock();
+
+      if (--(*this->count_) == 0) {
         this->free();
       } else {
-        this->_mutex->unlock();
+        this->mutex_->unlock();
       }
 
-      this->_size = 0;
-      this->_ptr = nullptr;
-      this->_count = nullptr;
-      this->_mutex = nullptr;
+      this->size_ = 0;
+      this->ptr_ = nullptr;
+      this->count_ = nullptr;
+      this->mutex_ = nullptr;
     }
   }
 
   constexpr void inc (void) {
-    if (this->_ptr != nullptr) {
-      this->_mutex->lock();
-      ++(*this->_count);
-      this->_mutex->unlock();
+    if (this->ptr_ != nullptr) {
+      this->mutex_->lock();
+      ++(*this->count_);
+      this->mutex_->unlock();
     }
   }
 
  public:
 
   constexpr void copy_meta (ts_ptr const& ot) {
-    this->_ptr = ot._ptr;
-    this->_count = ot._count;
-    this->_mutex = ot._mutex;
-    this->_size = ot._size;
+    this->ptr_ = ot.ptr_;
+    this->count_ = ot.count_;
+    this->mutex_ = ot.mutex_;
+    this->size_ = ot.size_;
   }
 
   constexpr ts_ptr& copy_from (ts_ptr const& ot) {
@@ -113,12 +114,12 @@ class ts_ptr {
   template <typename X = void, typename = std::enable_if_t<is_array, X>>
   constexpr void allocate (uintmax_t size, bool zero = false) {
     this->dec();
-    this->_size = size;
+    this->size_ = size;
 
-    this->_ptr = this->_alloc.allocate(size);
+    this->ptr_ = this->alloc_.allocate(size);
 
     for (uintmax_t i = 0; i < size; ++i) {
-      new (this->_ptr + i) type();
+      new (this->ptr_ + i) type();
     }
 
     this->init_storage();
@@ -127,50 +128,50 @@ class ts_ptr {
   template <typename X = void, typename = std::enable_if_t<!is_array, X>, typename... ARGS>
   constexpr void allocate (ARGS&&... args) {
     this->dec();
-    this->_size = 1;
+    this->size_ = 1;
 
-    this->_ptr = this->_alloc.allocate(1);
-    *this->_ptr = type(std::forward<ARGS>(args)...);
+    this->ptr_ = this->alloc_.allocate(1);
+    *this->ptr_ = type(std::forward<ARGS>(args)...);
 
     this->init_storage();
   }
 
   template <typename X = void, typename = std::enable_if_t<is_array, X>>
-  constexpr type_ptr begin (void) { return this->_ptr; }
+  constexpr type_ptr begin (void) { return this->ptr_; }
 
   template <typename X = void, typename = std::enable_if_t<is_array, X>>
-  constexpr type_ptr end (void) { return this->_ptr + this->size(); }
+  constexpr type_ptr end (void) { return this->ptr_ + this->size(); }
 
   template <typename X = void, typename = std::enable_if_t<is_array, X>>
-  constexpr type_ptr const begin (void) const { return this->_ptr; }
+  constexpr type_ptr const begin (void) const { return this->ptr_; }
 
   template <typename X = void, typename = std::enable_if_t<is_array, X>>
-  constexpr type_ptr const end (void) const { return this->_ptr + this->size(); }
+  constexpr type_ptr const end (void) const { return this->ptr_ + this->size(); }
 
   template <typename X = void, typename = std::enable_if_t<is_array, X>>
-  constexpr type_ptr const cbegin (void) const { return this->_ptr; }
+  constexpr type_ptr const cbegin (void) const { return this->ptr_; }
 
   template <typename X = void, typename = std::enable_if_t<is_array, X>>
-  constexpr type_ptr const cend (void) const { return this->_ptr + this->size(); }
+  constexpr type_ptr const cend (void) const { return this->ptr_ + this->size(); }
 
-  constexpr type_ptr get (void) { return this->_ptr; }
-  constexpr type_ptr const get (void) const { return this->_ptr; }
+  constexpr type_ptr get (void) { return this->ptr_; }
+  constexpr type_ptr const get (void) const { return this->ptr_; }
 
   constexpr void release (void) { this->dec(); }
 
   template <typename I, typename = std::enable_if_t<is_array, I>>
-  constexpr type& operator [] (I pos) { return this->_ptr[pos]; }
+  constexpr type& operator [] (I pos) { return this->ptr_[pos]; }
 
   template <typename I, typename = std::enable_if_t<is_array, I>>
-  constexpr type const& operator [] (I pos) const { return this->_ptr[pos]; }
+  constexpr type const& operator [] (I pos) const { return this->ptr_[pos]; }
 
-  constexpr type const& operator * (void) const { return *this->_ptr; }
-  constexpr type& operator * (void) { return *this->_ptr; }
+  constexpr type const& operator * (void) const { return *this->ptr_; }
+  constexpr type& operator * (void) { return *this->ptr_; }
 
-  constexpr uintmax_t const& size (void) const { return this->_size; }
-  constexpr bool empty (void) const { return this->_size == 0; }
+  constexpr uintmax_t const& size (void) const { return this->size_; }
+  constexpr bool empty (void) const { return this->size_ == 0; }
 
-  constexpr uintmax_t const& count (void) const { return *this->_count; }
+  constexpr uintmax_t const& count (void) const { return *this->count_; }
 
-  constexpr operator bool (void) const { return this->_ptr != nullptr; }
+  constexpr operator bool (void) const { return this->ptr_ != nullptr; }
 };

@@ -144,11 +144,11 @@ namespace util {
    public:
     // Constructor based on pointers
     constexpr container (IT begin, IT end)
-      : begin_{ begin }, end_{ end } {};
+    : begin_{ begin }, end_{ end } {};
 
     // Constructor based on begin pointer and size
     constexpr container (IT begin, uintmax_t size)
-      : container(begin, std::next(begin, size)) {};
+    : container{ begin, std::next(begin, size) } {};
 
     // Container's getters
     constexpr bool empty (void) const { return this->begin_ == this->end_; }

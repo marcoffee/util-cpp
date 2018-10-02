@@ -6,29 +6,29 @@ namespace util {
 
   argparse::params::params (string_map<std::string> const& def, string_set const& non_default) {
     for (std::string const& v : non_default) {
-      this->_data.emplace(v, empty_vector);
-      this->_set[v] = false;
+      this->data_.emplace(v, empty_vector);
+      this->set_[v] = false;
     }
 
     for (string_pair<std::string> const& kv : def) {
-      this->_data.emplace(kv.first, empty_vector).first->second.emplace_back(kv.second);
-      this->_set[kv.first] = false;
+      this->data_.emplace(kv.first, empty_vector).first->second.emplace_back(kv.second);
+      this->set_[kv.first] = false;
     }
   }
 
   bool argparse::params::is_set (std::string const& name) const {
-    auto it = this->_set.find(name);
-    return it != this->_set.end() and it->second;
+    auto it = this->set_.find(name);
+    return it != this->set_.end() and it->second;
   }
 
   void argparse::params::set (std::string const& name, std::string const& val, bool replace) {
-    auto it = this->_data.find(name);
+    auto it = this->data_.find(name);
     bool is_set = this->is_set(name);
 
     replace |= !is_set;
 
-    if (it == this->_data.end()) {
-      it = this->_data.emplace(name, empty_vector).first;
+    if (it == this->data_.end()) {
+      it = this->data_.emplace(name, empty_vector).first;
     } else if (replace) {
       it->second.clear();
     }
@@ -36,14 +36,14 @@ namespace util {
     it->second.emplace_back(val);
 
     if (!is_set) {
-      this->_set[name] = true;
+      this->set_[name] = true;
     }
   }
 
   std::string& argparse::params::get_ref (std::string const& name) {
-    auto it = this->_data.find(name);
+    auto it = this->data_.find(name);
 
-    if (it != this->_data.end()) {
+    if (it != this->data_.end()) {
       return it->second.front();
     }
 
@@ -51,9 +51,9 @@ namespace util {
   }
 
   std::string const& argparse::params::get_ref (std::string const& name) const {
-    auto it = this->_data.find(name);
+    auto it = this->data_.find(name);
 
-    if (it != this->_data.end()) {
+    if (it != this->data_.end()) {
       return it->second.front();
     }
 
@@ -68,7 +68,7 @@ namespace util {
   }
 
   std::ostream& operator << (std::ostream& out, argparse::params const& args) {
-    for (string_pair<string_vector> const& kv : args._data) {
+    for (string_pair<string_vector> const& kv : args.data_) {
       out << kv.first << ": ";
       bool first = true;
 
@@ -121,9 +121,9 @@ namespace util {
       throw param_positional_invalid_options(name);
     }
 
-    if (!this->_positional.empty()) {
-      if (this->_options.at(this->_positional.back()).is_multiple()) {
-        throw param_positional_multiple_exists(name, this->_positional.back());
+    if (!this->positional_.empty()) {
+      if (this->options_.at(this->positional_.back()).is_multiple()) {
+        throw param_positional_multiple_exists(name, this->positional_.back());
       }
     }
   }
@@ -157,9 +157,9 @@ namespace util {
   }
 
   void argparse::assert_choices_arg (std::string const& name, std::string const& param) const {
-    auto it = this->_choices.find(name);
+    auto it = this->choices_.find(name);
 
-    if (it != this->_choices.end() and !it->second.count(param)) {
+    if (it != this->choices_.end() and !it->second.count(param)) {
       throw param_choices_not_exist(name, param);
     }
   }
@@ -180,13 +180,13 @@ namespace util {
     if (name[0] != '-') {
       opt |= option::required;
       this->assert_param_positional(name, opt);
-      this->_positional.emplace_back(name);
+      this->positional_.emplace_back(name);
     }
 
   }
 
   argparse::params argparse::parse (uintmax_t const& argc, char const* const* argv) {
-    argparse::params result(this->_default, this->_non_default);
+    argparse::params result(this->default_, this->non_default_);
     uintmax_t pos_filled = 0;
     uintmax_t i = 1;
 
@@ -195,15 +195,15 @@ namespace util {
 
       if (this->maybe_arg(name)) {
         i++;
-      } else if (pos_filled < this->_positional.size()) {
-        name = this->_positional[pos_filled++];
+      } else if (pos_filled < this->positional_.size()) {
+        name = this->positional_[pos_filled++];
       } else {
         throw param_unknown(name);
       }
 
       this->assert_param_exists(name);
 
-      option const& opt = this->_options[name];
+      option const& opt = this->options_[name];
 
       if (opt.is_enabler()) {
         result.set(name, "1", true);
@@ -239,7 +239,7 @@ namespace util {
       }
     }
 
-    for (string_pair<option> const& name_opt : this->_options) {
+    for (string_pair<option> const& name_opt : this->options_) {
       this->assert_param_required(name_opt.first, name_opt.second, result);
     }
 
@@ -255,11 +255,11 @@ namespace util {
       def = "0";
     }
 
-    this->_options.emplace(name, std::move(opt));
-    this->_default.emplace(name, def);
+    this->options_.emplace(name, std::move(opt));
+    this->default_.emplace(name, def);
 
     if (!choices.empty()) {
-      this->_choices.emplace(name, choices);
+      this->choices_.emplace(name, choices);
     }
   }
 
@@ -268,18 +268,18 @@ namespace util {
     this->fix_assert_new_param(name, opt, choices);
     this->assert_non_default(name, opt);
 
-    this->_options.emplace(name, std::move(opt));
+    this->options_.emplace(name, std::move(opt));
 
     if (opt.is_enabler() or opt.is_counter()) {
-      this->_default.emplace(name, "0");
+      this->default_.emplace(name, "0");
     } else if (opt.is_disabler()) {
-      this->_default.emplace(name, "1");
+      this->default_.emplace(name, "1");
     } else {
-      this->_non_default.emplace(name);
+      this->non_default_.emplace(name);
     }
 
     if (!choices.empty()) {
-      this->_choices.emplace(name, choices);
+      this->choices_.emplace(name, choices);
     }
   }
 

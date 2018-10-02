@@ -14,9 +14,9 @@ namespace __EVO_NAMESPACE {
     using mutation_counter = typename clonal::mutation_counter;
 
    protected:
-    siz_t _popsize;
-    siz_t _cs;
-    bool _drift = true;
+    siz_t popsize_;
+    siz_t cs_;
+    bool drift_ = true;
 
     siz_t initialize (chr_t* chr, fit_t* fit, siz_t) override {
       return this->evo_t::initialize(chr, fit, this->popsize());
@@ -48,7 +48,7 @@ namespace __EVO_NAMESPACE {
 
    public:
     clonalg (siz_t popsize, siz_t cs, sed_t seed = 0)
-      : evo_t(popsize * (cs + 1), seed), _popsize(popsize), _cs(cs) {}
+    : evo_t{ popsize * (cs + 1), seed }, popsize_{ popsize }, cs_{ cs } {}
 
     evo_t* copy (void) const { return new gen_t(*this); }
 
@@ -63,11 +63,11 @@ namespace __EVO_NAMESPACE {
       ));
     }
 
-    siz_t popsize (void) const { return this->_popsize; }
-    siz_t cs (void) const { return this->_cs; }
+    siz_t popsize (void) const { return this->popsize_; }
+    siz_t cs (void) const { return this->cs_; }
 
-    bool& neutral_drift (void) { return this->_drift; }
-    bool const& neutral_drift (void) const { return this->_drift; }
+    bool& neutral_drift (void) { return this->drift_; }
+    bool const& neutral_drift (void) const { return this->drift_; }
   };
 
 };

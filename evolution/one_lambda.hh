@@ -11,12 +11,12 @@ namespace __EVO_NAMESPACE {
     __EVO_USING_FUNCTIONS;
 
    private:
-    uintmax_t _lambda;
-    bool _drift = true;
-    bool _changed = false;
+    uintmax_t lambda_;
+    bool drift_ = true;
+    bool changed_ = false;
 
     siz_t initialize (chr_t* chr, fit_t* fit, siz_t) override {
-      this->_changed = true;
+      this->changed_ = true;
       return this->evo_t::initialize(chr, fit, 1);
     }
 
@@ -35,7 +35,7 @@ namespace __EVO_NAMESPACE {
       if (is_better) {
         std::swap(chr[0], chr[best_child]);
         std::swap(fit[0], fit[best_child]);
-        this->_changed = true;
+        this->changed_ = true;
       }
 
       return 1;
@@ -44,7 +44,7 @@ namespace __EVO_NAMESPACE {
    public:
 
     one_lambda (uintmax_t lambda, uintmax_t seed)
-      : evo_t(1 + lambda, seed), _lambda(lambda) {};
+    : evo_t{ 1 + lambda, seed }, lambda_{ lambda } {};
 
     evo_t* copy (void) const override { return new one_lambda(*this); }
     siz_t best (siz_t = 0) override { return 0; }
@@ -55,13 +55,13 @@ namespace __EVO_NAMESPACE {
       });
     }
 
-    uintmax_t& lambda (void) { return this->_lambda; }
-    uintmax_t const& lambda (void) const { return this->_lambda; }
+    uintmax_t& lambda (void) { return this->lambda_; }
+    uintmax_t const& lambda (void) const { return this->lambda_; }
 
-    bool& neutral_drift (void) { return this->_drift; }
-    bool const& neutral_drift (void) const { return this->_drift; }
+    bool& neutral_drift (void) { return this->drift_; }
+    bool const& neutral_drift (void) const { return this->drift_; }
 
-    bool const& changed (void) const { return this->_changed; }
+    bool const& changed (void) const { return this->changed_; }
   };
 
 };

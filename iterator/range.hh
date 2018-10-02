@@ -15,84 +15,84 @@ namespace util::iterator {
     using iterator_category = std::random_access_iterator_tag;
 
    private:
-    T _state = 0;
+    T state_ = 0;
 
    public:
-    constexpr explicit range (T start = 0) : _state(start) {}
+    constexpr explicit range (T start = 0) : state_{ start } {}
 
-    constexpr T state (void) const { return this->_state; }
+    constexpr T state (void) const { return this->state_; }
     constexpr T operator * (void) { return this->state(); }
 
     constexpr range& operator ++ (void) {
-      this->_state += 1;
+      this->state_ += 1;
       return *this;
     }
 
     constexpr range& operator -- (void) {
-      this->_state -= 1;
+      this->state_ -= 1;
       return *this;
     }
 
     constexpr range operator ++ (int) {
-      range rng(this->_state);
-      this->_state += 1;
+      range rng(this->state_);
+      this->state_ += 1;
       return rng;
     }
 
     constexpr range operator -- (int) {
-      range rng(this->_state);
-      this->_state -= 1;
+      range rng(this->state_);
+      this->state_ -= 1;
       return rng;
     }
 
     constexpr range& operator += (difference_type d) {
-      this->_state += d;
+      this->state_ += d;
       return *this;
     }
 
     constexpr range& operator -= (difference_type d) {
-      this->_state -= d;
+      this->state_ -= d;
       return *this;
     }
 
     constexpr range operator + (difference_type d) const {
-      return range(this->_state + d);
+      return range(this->state_ + d);
     }
 
     constexpr range operator - (difference_type d) const {
-      return range(this->_state - d);
+      return range(this->state_ - d);
     }
 
     constexpr T operator [] (difference_type d) const {
-      return this->_state + d;
+      return this->state_ + d;
     }
 
     constexpr difference_type operator - (range const& rng) const {
-      return this->_state - rng._state;
+      return this->state_ - rng.state_;
     }
 
     constexpr bool operator == (range const& rng) const {
-      return this->_state == rng._state;
+      return this->state_ == rng.state_;
     }
 
     constexpr bool operator != (range const& rng) const {
-      return this->_state != rng._state;
+      return this->state_ != rng.state_;
     }
 
     constexpr bool operator > (range const& rng) const {
-      return this->_state > rng._state;
+      return this->state_ > rng.state_;
     }
 
     constexpr bool operator < (range const& rng) const {
-      return this->_state < rng._state;
+      return this->state_ < rng.state_;
     }
 
     constexpr bool operator >= (range const& rng) const {
-      return this->_state >= rng._state;
+      return this->state_ >= rng.state_;
     }
 
     constexpr bool operator <= (range const& rng) const {
-      return this->_state <= rng._state;
+      return this->state_ <= rng.state_;
     }
   };
 

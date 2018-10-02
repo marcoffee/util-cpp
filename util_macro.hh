@@ -46,45 +46,45 @@ if ((every) != 0 and ( \
 #define macro_ternary(cond, t, f) macro_ternary_ ## cond (t, f)
 
 // Auto create iterators
-#define expand_mutable_iterators(param, it, _b, _e, suf, ce) \
-  macro_ternary(ce, constexpr, inline) it suf ## begin param { return (_b); } \
-  macro_ternary(ce, constexpr, inline) it suf ## end param { return (_e); }
+#define expand_mutable_iterators(param, it, bf, ef, suf, ce) \
+  macro_ternary(ce, constexpr, inline) it suf ## begin param { return (bf); } \
+  macro_ternary(ce, constexpr, inline) it suf ## end param { return (ef); }
 
-#define expand_const_iterators(param, cit, _b, _e, suf, ce) \
-  macro_ternary(ce, constexpr, inline) cit suf ## begin param const { return (_b); } \
-  macro_ternary(ce, constexpr, inline) cit suf ## end param const { return (_e); } \
-  macro_ternary(ce, constexpr, inline) cit c ## suf ## begin param const { return (_b); } \
-  macro_ternary(ce, constexpr, inline) cit c ## suf ## end param const { return (_e); }
+#define expand_const_iterators(param, cit, bf, ef, suf, ce) \
+  macro_ternary(ce, constexpr, inline) cit suf ## begin param const { return (bf); } \
+  macro_ternary(ce, constexpr, inline) cit suf ## end param const { return (ef); } \
+  macro_ternary(ce, constexpr, inline) cit c ## suf ## begin param const { return (bf); } \
+  macro_ternary(ce, constexpr, inline) cit c ## suf ## end param const { return (ef); }
 
-#define expand_mutable_reverse_iterators(param, it, _b, _e, suf, ce) \
-  macro_ternary(ce, constexpr, inline) std::reverse_iterator<it> r ## suf ## begin param { return std::make_reverse_iterator<it>(_e); } \
-  macro_ternary(ce, constexpr, inline) std::reverse_iterator<it> r ## suf ## end param { return std::make_reverse_iterator<it>(_b); }
+#define expand_mutable_reverse_iterators(param, it, bf, ef, suf, ce) \
+  macro_ternary(ce, constexpr, inline) std::reverse_iterator<it> r ## suf ## begin param { return std::make_reverse_iterator<it>(ef); } \
+  macro_ternary(ce, constexpr, inline) std::reverse_iterator<it> r ## suf ## end param { return std::make_reverse_iterator<it>(bf); }
 
-#define expand_const_reverse_iterators(param, cit, _b, _e, suf, ce) \
-  macro_ternary(ce, constexpr, inline) std::reverse_iterator<cit> r ## suf ## begin param const { return std::make_reverse_iterator<cit>(_e); } \
-  macro_ternary(ce, constexpr, inline) std::reverse_iterator<cit> r ## suf ## end param const { return std::make_reverse_iterator<cit>(_b); } \
-  macro_ternary(ce, constexpr, inline) std::reverse_iterator<cit> cr ## suf ## begin param const { return std::make_reverse_iterator<cit>(_e); } \
-  macro_ternary(ce, constexpr, inline) std::reverse_iterator<cit> cr ## suf ## end param const { return std::make_reverse_iterator<cit>(_b); }
+#define expand_const_reverse_iterators(param, cit, bf, ef, suf, ce) \
+  macro_ternary(ce, constexpr, inline) std::reverse_iterator<cit> r ## suf ## begin param const { return std::make_reverse_iterator<cit>(ef); } \
+  macro_ternary(ce, constexpr, inline) std::reverse_iterator<cit> r ## suf ## end param const { return std::make_reverse_iterator<cit>(bf); } \
+  macro_ternary(ce, constexpr, inline) std::reverse_iterator<cit> cr ## suf ## begin param const { return std::make_reverse_iterator<cit>(ef); } \
+  macro_ternary(ce, constexpr, inline) std::reverse_iterator<cit> cr ## suf ## end param const { return std::make_reverse_iterator<cit>(bf); }
 
-#define expand_iterators(param, it, cit, _b, _e, suf, ce) \
-  expand_mutable_iterators(param, it, _b, _e, suf, ce) \
-  expand_const_iterators(param, cit, _b, _e, suf, ce)
+#define expand_iterators(param, it, cit, bf, ef, suf, ce) \
+  expand_mutable_iterators(param, it, bf, ef, suf, ce) \
+  expand_const_iterators(param, cit, bf, ef, suf, ce)
 
-#define expand_reverse_iterators(param, it, cit, _b, _e, suf, ce) \
-  expand_mutable_reverse_iterators(param, it, _b, _e, suf, ce) \
-  expand_const_reverse_iterators(param, cit, _b, _e, suf, ce)
+#define expand_reverse_iterators(param, it, cit, bf, ef, suf, ce) \
+  expand_mutable_reverse_iterators(param, it, bf, ef, suf, ce) \
+  expand_const_reverse_iterators(param, cit, bf, ef, suf, ce)
 
-#define expand_all_iterators(param, it, cit, _b, _e, suf, ce) \
-  expand_iterators(param, it, cit, _b, _e, suf, ce) \
-  expand_reverse_iterators(param, it, cit, _b, _e, suf, ce)
+#define expand_all_iterators(param, it, cit, bf, ef, suf, ce) \
+  expand_iterators(param, it, cit, bf, ef, suf, ce) \
+  expand_reverse_iterators(param, it, cit, bf, ef, suf, ce)
 
-#define expand_all_mutable_iterators(param, it, _b, _e, suf, ce) \
-  expand_mutable_iterators(param, it, _b, _e, suf, ce) \
-  expand_mutable_reverse_iterators(param, it, _b, _e, suf, ce)
+#define expand_all_mutable_iterators(param, it, bf, ef, suf, ce) \
+  expand_mutable_iterators(param, it, bf, ef, suf, ce) \
+  expand_mutable_reverse_iterators(param, it, bf, ef, suf, ce)
 
-#define expand_all_const_iterators(param, cit, _b, _e, suf, ce) \
-  expand_const_iterators(param, cit, _b, _e, suf, ce) \
-  expand_const_reverse_iterators(param, cit, _b, _e, suf, ce)
+#define expand_all_const_iterators(param, cit, bf, ef, suf, ce) \
+  expand_const_iterators(param, cit, bf, ef, suf, ce) \
+  expand_const_reverse_iterators(param, cit, bf, ef, suf, ce)
 
 // Time logging functions
 #define time_start(tid) \

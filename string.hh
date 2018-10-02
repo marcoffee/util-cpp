@@ -10,7 +10,7 @@
 
 namespace util::string {
 
-  extern std::string_view _ref_sv;
+  extern std::string_view ref_sv;
   constexpr std::string_view whitespace{ WHITESPACE };
 
   // Defines the split function types
@@ -21,7 +21,7 @@ namespace util::string {
   // Splits a string on the leftmost occurence of a delimiter
   constexpr std::string_view lsplit (
     std::string_view str, std::string_view const& delim,
-    std::string_view& rem = _ref_sv
+    std::string_view& rem = ref_sv
   ) {
     // Find delimiter
     uintmax_t const pos = str.find_first_of(delim);
@@ -39,7 +39,7 @@ namespace util::string {
   // Splits a string on the rightmost occurence of a delimiter
   constexpr std::string_view rsplit (
     std::string_view str, std::string_view const& delim,
-    std::string_view& rem = _ref_sv
+    std::string_view& rem = ref_sv
   ) {
     // Find delimiter
     uintmax_t const pos = str.find_last_of(delim);

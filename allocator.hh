@@ -19,7 +19,7 @@ namespace util::allocator {
     using base = std::allocator<T>;
 
    private:
-    base _alloc;
+    base alloc_;
 
    public:
     using value_type = typename base::value_type;
@@ -29,14 +29,14 @@ namespace util::allocator {
     using is_always_equal = typename base::is_always_equal;
 
     template <typename... ARGS>
-    allocator (ARGS&&... args) : _alloc(std::forward<ARGS>(args)...) {}
+    allocator (ARGS&&... args) : alloc_{ std::forward<ARGS>(args)... } {}
 
     template <typename... ARGS>
     [[nodiscard]] T* allocate (std::size_t n, ARGS&&... args) {
       // Log allocation
       add_memory(n * sizeof(T));
       // Calls base allocator
-      return this->_alloc.allocate(n, std::forward<ARGS>(args)...);
+      return this->alloc_.allocate(n, std::forward<ARGS>(args)...);
     }
 
     template <typename... ARGS>
@@ -44,15 +44,15 @@ namespace util::allocator {
       // Log deallocation
       free_memory(n * sizeof(T));
       // Calls base deallocator
-      this->_alloc.deallocate(p, n, std::forward<ARGS>(args)...);
+      this->alloc_.deallocate(p, n, std::forward<ARGS>(args)...);
     }
 
     bool operator == (allocator const& ot) const {
-      return this->_alloc == ot._alloc;
+      return this->alloc_ == ot.alloc_;
     }
 
     bool operator != (allocator const& ot) const {
-      return this->_alloc != ot._alloc;
+      return this->alloc_ != ot.alloc_;
     }
 
   };

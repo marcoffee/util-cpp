@@ -14,13 +14,15 @@ namespace util::vector {
 
   // Multi dimension vector
   template <typename T, uintmax_t C>
-  struct _multi { using type = std::vector<typename _multi<T, C - 1>::type>; };
+  struct multi_st {
+    using type = std::vector<typename multi_st<T, C - 1>::type>;
+  };
 
   template <typename T>
-  struct _multi<T, 0> { using type = T; };
+  struct multi_st<T, 0> { using type = T; };
 
   template <typename T, uintmax_t C>
-  using multi = typename _multi<T, C>::type;
+  using multi = typename multi_st<T, C>::type;
 
   // Make a multi dimension vector
   template <typename T, typename... ARGS>

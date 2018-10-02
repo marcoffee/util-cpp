@@ -14,7 +14,7 @@ namespace util::iterator {
     using reference = T;
     using iterator_category = std::random_access_iterator_tag;
 
-    getter (I pos) : range<I>(pos) {}
+    getter (I pos) : range<I>{ pos } {}
 
     virtual T get (I) = 0;
 

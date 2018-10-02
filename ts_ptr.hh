@@ -13,12 +13,12 @@ template <
   typename Alloc = std::allocator<typename std::remove_extent<T>::type>
 >
 class ts_ptr {
-public:
+ public:
   constexpr static bool is_array = std::is_array<T>::value;
   using type = typename std::remove_extent<T>::type;
   using type_ptr = type*;
 
-private:
+ private:
   Alloc _alloc;
   uintmax_t _size = 0;
   type_ptr _ptr = nullptr;
@@ -63,7 +63,7 @@ private:
     }
   }
 
-public:
+ public:
 
   constexpr void copy_meta (ts_ptr const& ot) {
     this->_ptr = ot._ptr;

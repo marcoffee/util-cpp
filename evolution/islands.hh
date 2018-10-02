@@ -6,11 +6,11 @@ namespace __EVO_NAMESPACE {
 
   __EVO_TMPL_HEAD
   class islands {
-  public:
+   public:
     __EVO_USING_TYPES(islands);
     __EVO_USING_FUNCTIONS;
 
-  private:
+   private:
     rnd_t _rnd;
     siz_t _size = 0;
     evo_t** _world = nullptr;
@@ -65,7 +65,7 @@ namespace __EVO_NAMESPACE {
       ot.release(false);
     }
 
-  public:
+   public:
     explicit islands (siz_t size, siz_t seed = 0)
     : _rnd(seed), _size(size) { this->alloc(false); }
 

@@ -129,7 +129,7 @@ namespace util {
   >
   class container {
 
-  public:
+   public:
     using iterator = IT;
     using const_iterator = CIT;
     using reverse_iterator = std::reverse_iterator<iterator>;
@@ -138,10 +138,10 @@ namespace util {
     using value_type = typename std::iterator_traits<iterator>::value_type;
     using iterator_category = typename std::iterator_traits<iterator>::iterator_category;
 
-  private:
+   private:
     IT begin_, end_;
 
-  public:
+   public:
     // Constructor based on pointers
     constexpr container (IT begin, IT end)
       : begin_{ begin }, end_{ end } {};

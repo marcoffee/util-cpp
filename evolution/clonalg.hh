@@ -6,14 +6,14 @@ namespace __EVO_NAMESPACE {
 
   __EVO_TMPL_HEAD
   class clonalg : public __EVO_BASE {
-  public:
+   public:
     __EVO_USING_TYPES(clonalg);
     __EVO_USING_FUNCTIONS;
 
     using clonal = typename generators::clonal;
     using mutation_counter = typename clonal::mutation_counter;
 
-  protected:
+   protected:
     siz_t _popsize;
     siz_t _cs;
     bool _drift = true;
@@ -46,7 +46,7 @@ namespace __EVO_NAMESPACE {
       return this->popsize();
     }
 
-  public:
+   public:
     clonalg (siz_t popsize, siz_t cs, sed_t seed = 0)
       : evo_t(popsize * (cs + 1), seed), _popsize(popsize), _cs(cs) {}
 

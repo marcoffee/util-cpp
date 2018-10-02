@@ -10,17 +10,17 @@ namespace __EVO_NAMESPACE {
   __EVO_TMPL_HEAD
   class nsais : public nsga<__EVO_TMPL_CLASS_ARGS> {
 
-  public:
+   public:
     __EVO_USING_TYPES(nsais);
     __EVO_USING_FUNCTIONS;
 
     using const_fro_iterator = siz_t const*;
     using const_dis_iterator = dis_t const*;
 
-  protected:
+   protected:
     siz_t _cs;
 
-  public:
+   public:
     nsais (siz_t popsize, siz_t cs, siz_t dimensions, siz_t seed)
       : nsga<__EVO_TMPL_CLASS_ARGS>(popsize, popsize * cs, dimensions, seed), _cs(cs) {}
 

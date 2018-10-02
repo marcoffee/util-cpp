@@ -13,7 +13,7 @@ namespace __EVO_NAMESPACE {
 
   __EVO_TMPL_HEAD
   class base {
-  public:
+   public:
     __EVO_USING_TYPES(base);
     __EVO_USING_FUNCTIONS;
 
@@ -64,7 +64,7 @@ namespace __EVO_NAMESPACE {
       return choice;
     }
 
-  private:
+   private:
 
     rnd_t _rnd;
     siz_t _dimensions = 0, _max_size = 0, _size = 0;
@@ -85,7 +85,7 @@ namespace __EVO_NAMESPACE {
     step_event _before_step = noop<step_event>;
     step_event _after_step = noop<step_event>;
 
-  protected:
+   protected:
 
     virtual void alloc (bool) {
       this->_chr = new chr_t[this->max_size()];
@@ -243,7 +243,7 @@ namespace __EVO_NAMESPACE {
       return this->select(this->_chr, this->_fit, old, all);
     }
 
-  public:
+   public:
 
     base (siz_t dimensions, siz_t max_size, sed_t seed)
       : _rnd(seed), _dimensions(dimensions), _max_size(max_size) {

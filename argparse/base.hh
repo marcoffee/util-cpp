@@ -22,13 +22,13 @@ namespace util {
 
   class argparse {
 
-  public:
+   public:
     class params;
 
     class option {
       uint8_t _value;
 
-    public:
+     public:
       static constexpr uint8_t
         none = 0b00000U, required = 0b00001U, multiple = 0b00010U,
         enabler = 0b00100U, disabler = 0b01000U, counter = 0b10000U;
@@ -50,7 +50,7 @@ namespace util {
 
     static bool valid_name (std::string const& name);
 
-  private:
+   private:
     string_map<option> _options;
     string_mapset _choices;
     string_map<std::string> _default;
@@ -69,7 +69,7 @@ namespace util {
 
     void fix_assert_new_param (std::string const& name, option& opt, string_set const& choices);
 
-  public:
+   public:
     argparse (void) {}
 
     params parse (uintmax_t const& argc, char const* const* argv);
@@ -97,11 +97,11 @@ namespace util {
 
   class argparse::params {
 
-  public:
+   public:
     template <typename T>
     using conversor = std::function<T(std::string const&)>;
 
-  private:
+   private:
     friend class argparse;
     static string_vector const empty_vector;
 
@@ -116,7 +116,7 @@ namespace util {
       map_iterator _real;
       conversor<T> _convert;
 
-    public:
+     public:
       iterator (void) {}
 
       iterator (map_iterator const real, conversor<T> const& convert)
@@ -136,8 +136,7 @@ namespace util {
 
     };
 
-  public:
-
+   public:
     template <typename T>
     static T default_conversor (std::string const& value) {
       if constexpr (std::is_same_v<T, std::string>) {

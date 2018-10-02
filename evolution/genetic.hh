@@ -6,11 +6,11 @@ namespace __EVO_NAMESPACE {
 
   __EVO_TMPL_HEAD
   class genetic : public __EVO_BASE {
-  public:
+   public:
     __EVO_USING_TYPES(genetic);
     __EVO_USING_FUNCTIONS;
 
-  protected:
+   protected:
     siz_t _popsize;
     siz_t _elitism = 1;
 
@@ -33,7 +33,7 @@ namespace __EVO_NAMESPACE {
       return this->popsize();
     }
 
-  public:
+   public:
     genetic (siz_t size, sed_t seed = 0)
       : evo_t(size + size, seed), _popsize(size) {}
 

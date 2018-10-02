@@ -15,7 +15,7 @@ namespace util::iterator {
   template <typename T, uintmax_t D, typename V, typename PTR = V, typename REF = V>
   class ndimensional {
 
-  public:
+   public:
     using difference_type = intmax_t;
     using value_type = V;
     using pointer = PTR;
@@ -23,10 +23,10 @@ namespace util::iterator {
     using iterator_category = std::random_access_iterator_tag;
     using index = std::array<uintmax_t, D>;
 
-  private:
+   private:
     index _size, _idx;
 
-  public:
+   public:
     constexpr static uintmax_t absolute_pos (index const& size, index const& idx);
     constexpr static void relative_pos (uintmax_t abso, index const& size, index& out);
 

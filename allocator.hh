@@ -15,13 +15,13 @@ namespace util::allocator {
 
   template <typename T>
   class allocator {
-  public:
+   public:
     using base = std::allocator<T>;
 
-  private:
+   private:
     base _alloc;
 
-  public:
+   public:
     using value_type = typename base::value_type;
     using size_type = typename base::size_type;
     using difference_type = typename base::difference_type;

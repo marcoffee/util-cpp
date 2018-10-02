@@ -7,7 +7,7 @@ namespace util::iterator {
   template <typename T, typename I = intmax_t>
   class getter : public range<I> {
 
-  public:
+   public:
     using difference_type = intmax_t;
     using value_type = T;
     using pointer = T;

@@ -80,31 +80,31 @@ constexpr T bitwise_repeat_v = bitwise_repeat<T, patt, size>::value;
 // Create bit patterns meant to be used in popcount
 template <typename T, uintmax_t pos, bool less>
 struct make_pattern {
-private:
+ private:
   static constexpr uintmax_t one = 1;
   static constexpr uintmax_t bits = one << pos;
   static constexpr uintmax_t block = (one << bits) - one;
   static constexpr uintmax_t patt = less ? block : (block << bits);
 
-public:
+ public:
   static constexpr T value = bitwise_repeat_v<T, patt, bits << one>;
 };
 
 template <typename T, bool less>
 struct make_pattern<T, 1, less> {
-private:
+ private:
   static constexpr T patt = less ? 0x3 : 0xC;
 
-public:
+ public:
   static constexpr T value = bitwise_repeat_v<T, patt, 4>;
 };
 
 template <typename T, bool less>
 struct make_pattern<T, 0, less> {
-private:
+ private:
   static constexpr T patt = less ? 0x5 : 0xA;
 
-public:
+ public:
   static constexpr T value = bitwise_repeat_v<T, patt, 4>;
 };
 
@@ -121,10 +121,10 @@ struct make_pattern_array : make_pattern_array<
 
 template <typename T, bool less, T... vals>
 struct make_pattern_array<T, 0, less, vals...> {
-private:
+ private:
   static constexpr uintmax_t l_shift = static_log2_v<count_bits_v<T>>;
 
-public:
+ public:
   static constexpr std::array<T, l_shift> value = { vals... };
 };
 

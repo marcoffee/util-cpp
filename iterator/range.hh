@@ -7,17 +7,17 @@ namespace util::iterator {
   template <typename T = intmax_t>
   class range {
 
-  public:
+   public:
     using difference_type = intmax_t;
     using value_type = T;
     using pointer = T;
     using reference = T;
     using iterator_category = std::random_access_iterator_tag;
 
-  private:
+   private:
     T _state = 0;
 
-  public:
+   public:
     constexpr explicit range (T start = 0) : _state(start) {}
 
     constexpr T state (void) const { return this->_state; }

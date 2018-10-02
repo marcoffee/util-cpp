@@ -10,14 +10,14 @@ namespace __EVO_NAMESPACE {
   __EVO_TMPL_HEAD
   class nsga : public __EVO_BASE {
 
-  public:
+   public:
     __EVO_USING_TYPES(nsga);
     __EVO_USING_FUNCTIONS;
 
     using const_fro_iterator = siz_t const*;
     using const_dis_iterator = dis_t const*;
 
-  protected:
+   protected:
     siz_t _popsize;
     siz_t _children;
     siz_t _fronts;
@@ -272,7 +272,7 @@ namespace __EVO_NAMESPACE {
       throw std::runtime_error("Cannot update population on NSGA.");
     }
 
-  public:
+   public:
 
     nsga (siz_t popsize, siz_t children, siz_t dimensions, siz_t seed)
       : evo_t(dimensions, popsize + children, seed),

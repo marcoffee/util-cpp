@@ -6,11 +6,11 @@ namespace __EVO_NAMESPACE {
 
   __EVO_TMPL_HEAD
   class one_lambda : public __EVO_BASE {
-  public:
+   public:
     __EVO_USING_TYPES(one_lambda);
     __EVO_USING_FUNCTIONS;
 
-  private:
+   private:
     uintmax_t _lambda;
     bool _drift = true;
     bool _changed = false;
@@ -41,7 +41,7 @@ namespace __EVO_NAMESPACE {
       return 1;
     }
 
-  public:
+   public:
 
     one_lambda (uintmax_t lambda, uintmax_t seed)
       : evo_t(1 + lambda, seed), _lambda(lambda) {};

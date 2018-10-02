@@ -6,7 +6,7 @@ namespace __EVO_NAMESPACE {
 
   template <typename EVO>
   class base_generators {
-  public:
+   public:
     __EVO_COPY_TYPES(base_generators, typename EVO);
     __EVO_USING_FUNCTIONS;
 
@@ -47,7 +47,7 @@ namespace __EVO_NAMESPACE {
     }
 
     class clonal {
-    public:
+   public:
       using mutation_counter = std::function<siz_t(evo_t&, siz_t, siz_t)>;
 
       static siz_t ranking_count (evo_t&, siz_t, siz_t rank) {
@@ -60,13 +60,13 @@ namespace __EVO_NAMESPACE {
         };
       }
 
-    private:
+   private:
       mutator _mutate;
       siz_t _cs;
       index_comparator _cmp;
       mutation_counter _count;
 
-    public:
+   public:
       clonal (
         mutator const& mutate, siz_t cs, index_comparator const& cmp,
         mutation_counter const& count = ranking_count

@@ -9,7 +9,6 @@
 
 template <
   typename T,
-  bool enable_cast = false,
   typename Alloc = std::allocator<typename std::remove_extent<T>::type>
 >
 class ts_ptr {
@@ -167,12 +166,6 @@ class ts_ptr {
 
   constexpr type const& operator * (void) const { return *this->_ptr; }
   constexpr type& operator * (void) { return *this->_ptr; }
-
-  template <typename X = void, typename = std::enable_if_t<enable_cast, X>>
-  constexpr operator type_ptr (void) { return this->_ptr; }
-
-  template <typename X = void, typename = std::enable_if_t<enable_cast, X>>
-  constexpr operator const type_ptr (void) const { return this->_ptr; }
 
   constexpr uintmax_t const& size (void) const { return this->_size; }
   constexpr bool empty (void) const { return this->_size == 0; }

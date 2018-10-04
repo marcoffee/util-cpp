@@ -21,13 +21,19 @@ namespace util {
 ////////////////////////////////////////////////////////////////////////////////
 
   // Create static array (similar to experimental::make_array)
-  template <typename T, T... sigs>
+  template <typename T, T... args>
   struct make_array_st {
-    constexpr static std::array<T, sizeof...(sigs)> const value{ sigs... };
+    constexpr static std::array<T, sizeof...(args)> const value{ args... };
   };
 
-  template <typename T, T... sigs>
-  constexpr auto const& make_array{ make_array_st<T, sigs...>::value };
+  template <typename T, T... args>
+  constexpr auto const& make_array{ make_array_st<T, args...>::value };
+
+  // Create static array from argument passing (similar to make_array)
+  template <typename T, typename... ARGS>
+  constexpr auto build_array (ARGS&&... args) {
+    return std::array<T, sizeof...(ARGS)>{ T(args)... };
+  }
 };
 
 // log2 at compile time

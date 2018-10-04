@@ -1,3 +1,5 @@
 #include "string.hh"
 
-std::string_view ref_sv;
+namespace util::string {
+  std::string_view ref_sv;
+}

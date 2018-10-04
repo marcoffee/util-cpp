@@ -200,4 +200,13 @@ namespace util::string {
     inp >> result;
     return result;
   }
+
+  // Concatenates multiple objects into one string
+  template <typename... ARGS>
+  std::string concat (ARGS&&... args) {
+    std::ostringstream out;
+
+    (out << ... << args);
+    return out.str();
+  }
 };

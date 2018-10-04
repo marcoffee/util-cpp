@@ -98,7 +98,7 @@ void bitset::build_combinations (
 
     // Otherwise, fill the buckets according to its position
     siz_t const contig = 1 << (not_filled - i - 1);
-    siz_t const next = contig << 1;
+    siz_t const next = contig * 2;
     siz_t fills = 0;
 
     for (bck_t* it = bs.begin() + contig; it < bs.end(); it += next) {
@@ -346,13 +346,13 @@ bitset::operator std::string (void) const {
   }
 
   std::string result;
-  result.reserve((this->size() + 3) >> 2);
+  result.reserve((this->size() + 3) / 4);
 
   siz_t const last_pos = this->buckets() - 1;
 
   // Convert each bucket, except the last
   for (siz_t i = 0; i < last_pos; ++i) {
-    constexpr siz_t wid = bitset::bits >> 2;
+    constexpr siz_t wid = bitset::bits / 4;
     bck_t const bck = this->bucket(i);
     std::ostringstream ss;
     ss << std::hex << std::setw(wid) << std::setfill('0') << std::right << bck;
@@ -365,7 +365,7 @@ bitset::operator std::string (void) const {
   // Convert the last bucket considering the mask
   std::ostringstream ss;
   bck_t const bck = this->bucket(last_pos) & this->last_mask();
-  siz_t const wid = (this->last_bits() + 3) >> 2;
+  siz_t const wid = (this->last_bits() + 3) / 4;
   ss << std::hex << std::setw(wid) << std::setfill('0') << std::right << bck;
 
   std::cout << wid << std::endl;

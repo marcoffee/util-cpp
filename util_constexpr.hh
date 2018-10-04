@@ -39,7 +39,7 @@ namespace util {
 // log2 at compile time
 template <uintmax_t N>
 struct static_log2 {
-  constexpr static uintmax_t value = static_log2<(N >> 1)>::value + 1;
+  constexpr static uintmax_t value = static_log2<N / 2>::value + 1;
 };
 
 template <>
@@ -98,7 +98,7 @@ struct make_pattern {
   static constexpr uintmax_t patt = less ? block : (block << bits);
 
  public:
-  static constexpr T value = bitwise_repeat_v<T, patt, bits << one>;
+  static constexpr T value = bitwise_repeat_v<T, patt, bits * 2>;
 };
 
 template <typename T, bool less>

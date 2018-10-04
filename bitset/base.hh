@@ -63,17 +63,16 @@ class bitset {
 
   // Helper members
   constexpr static siz_t const bits = std::numeric_limits<bck_t>::digits;
-  constexpr static siz_t const bits_mask = bitset::bits - 1;
   constexpr static siz_t const bits_shift = static_log2_v<bitset::bits>;
 
   // Gets the bucket index of a position
   constexpr static siz_t get_ind (siz_t pos) {
-    return pos >> bitset::bits_shift;
+    return pos / bitset::bits;
   }
 
   // Gets the bit index of a position
   constexpr static siz_t get_bit (siz_t pos) {
-    return pos & bitset::bits_mask;
+    return pos % bitset::bits;
   }
 
   // Counts the number of buckets required for a given size
@@ -411,7 +410,7 @@ class bitset {
   bck_t data (siz_t pos) const { return this->impl_->data_[pos]; }
   bck_t bucket (siz_t pos) const { return this->data(pos) ^ this->inverted(); }
   bck_t inverted (void) const { return this->inverted_; }
-  bool fit (void) const { return !(this->size() & bitset::bits_mask); }
+  bool fit (void) const { return (this->size() % bitset::bits) == 0; }
   bool valid (void) const { return this->impl_ != nullptr; }
 
   // Number of buckets available
@@ -426,7 +425,8 @@ class bitset {
 
     // Calculates the last bucket size
     bck_t const last = this->get_bit(this->size());
-    return ((one << last) - one) | ((zero - (last == zero)) & ~zero);
+    bck_t const zero_fix = (zero - (last == zero)) & ~zero;
+    return ((one << last) - one) | zero_fix;
   }
 
   // Number of bits on the last bucket

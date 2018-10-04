@@ -41,7 +41,7 @@ namespace __EVO_NAMESPACE {
     static siz_t roulette (
       evo_t& evo, siz_t size, index_comparator const& cmp
     ) {
-      std::uniform_int_distribution<siz_t> dist(0, (size * (size - 1)) >> 1);
+      std::uniform_int_distribution<siz_t> dist(0, (size * (size - 1)) / 2);
       siz_t choice = size;
       siz_t accum = dist(evo.random());
       siz_t *idx = new siz_t[size];

@@ -87,8 +87,11 @@ if ((every) != 0 and ( \
   expand_const_reverse_iterators(param, cit, bf, ef, suf, ce)
 
 // Time logging functions
-#define time_start(tid) \
-  auto __time_ ## tid = std::chrono::high_resolution_clock::now()
+#define time_start(tid, msg) \
+  auto const __msg_ ## tid { msg }; \
+  auto __time_ ## tid = std::chrono::high_resolution_clock::now(); \
+
+#define time_msg(tid) __msg_ ## tid
 
 #define time_end(tid) \
   std::chrono::duration<double>{ \

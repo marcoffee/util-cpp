@@ -75,21 +75,30 @@ namespace util::string {
   }
 
   // Splits a string in all occurences of a delimiter from left to right
-  template <typename... ARGS>
-  constexpr void lsplit_all (ARGS&&... args) {
-    return func_split_all(lsplit, std::forward<ARGS>(args)...);
+  template <typename IT>
+  constexpr void lsplit_all (
+    std::string_view str, std::string_view const& delim, IT to,
+    uintmax_t limit = std::string_view::npos
+  ) {
+    return func_split_all(lsplit, str, delim, to, limit);
   }
 
   // Splits a string in all occurences of a delimiter from right to left
-  template <typename... ARGS>
-  constexpr void rsplit_all (ARGS&&... args) {
-    return func_split_all(rsplit, std::forward<ARGS>(args)...);
+  template <typename IT>
+  constexpr void rsplit_all (
+    std::string_view str, std::string_view const& delim, IT to,
+    uintmax_t limit = std::string_view::npos
+  ) {
+    return func_split_all(rsplit, str, delim, to, limit);
   }
 
   // Splits a string in all occurences of a delimiter from left to right
-  template <typename... ARGS>
-  constexpr void split_all (ARGS&&... args) {
-    return lsplit_all(std::forward<ARGS>(args)...);
+  template <typename IT>
+  constexpr void split_all (
+    std::string_view str, std::string_view const& delim, IT to,
+    uintmax_t limit = std::string_view::npos
+  ) {
+    return lsplit_all(str, delim, to, limit);
   }
 
   // Splits a string in all occurences of a delimiter from left to right
@@ -116,9 +125,11 @@ namespace util::string {
 
   // Splits a string in all occurences of a delimiter from left to right
   // and stores the results on a vector
-  template <typename... ARGS>
-  inline std::vector<std::string_view> split_all (ARGS&&... args) {
-    return lsplit_all(std::forward<ARGS>(args)...);
+  inline std::vector<std::string_view> split_all (
+    std::string_view str, std::string_view const& delim,
+    uintmax_t limit = std::string_view::npos
+  ) {
+    return lsplit_all(str, delim, limit);
   }
 
 ////////////////////////////////////////////////////////////////////////////////

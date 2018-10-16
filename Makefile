@@ -9,8 +9,9 @@ DEFFLAGS   := -g -std=c++17 -Wall -fdiagnostics-color=always $(LIBS) $(MACROS) $
 DBGFLAGS   := -Og -fno-omit-frame-pointer -fno-inline-functions \
               -fno-inline-functions-called-once -fno-optimize-sibling-calls \
               -fno-default-inline -fno-inline -pg -DDEBUG
-RLSFLAGS   := -march=native -O2 -frename-registers -funroll-loops
+RLSFLAGS   := -march=native -frename-registers -funroll-loops
 QUIFLAGS   := -DQUIET
+OPT        := 3
 
 OBJDIR     := build
 DEPDIR     := deps
@@ -30,7 +31,7 @@ default: all
 
 all: release
 
-release: CXXFLAGS += $(RLSFLAGS)
+release: CXXFLAGS += $(RLSFLAGS) -O$(OPT)
 release: $(NAME)
 
 debug: CXXFLAGS += $(DBGFLAGS)

@@ -35,6 +35,8 @@ namespace util {
     return std::array<T, sizeof...(ARGS)>{ T(args)... };
   }
 
+  // Ceiling division of two unsigned integers
+  // Thanks to https://stackoverflow.com/a/2745086/6441345
   constexpr uintmax_t divceil (uintmax_t a, uintmax_t b) {
     return 1 + ((a - 1) / b);
   }

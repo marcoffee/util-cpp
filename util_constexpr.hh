@@ -34,6 +34,10 @@ namespace util {
   constexpr auto build_array (ARGS&&... args) {
     return std::array<T, sizeof...(ARGS)>{ T(args)... };
   }
+
+  constexpr uintmax_t divceil (uintmax_t a, uintmax_t b) {
+    return 1 + ((a - 1) / b);
+  }
 };
 
 // log2 at compile time

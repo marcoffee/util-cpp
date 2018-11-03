@@ -5,43 +5,6 @@
 #include <type_traits>
 #include "util_macro.hh"
 
-namespace util {
-  constexpr double PI = 3.141592653589793238463;
-
-  // Tests if a type is a specialization of a template
-  template <typename T, template <typename...> typename TMPL>
-  struct is_specialization_of : std::false_type {};
-
-  template <template <typename...> typename TMPL, typename... ARGS>
-  struct is_specialization_of<TMPL<ARGS...>, TMPL> : std::true_type {};
-
-  template <typename T, template <typename...> typename TMPL>
-  constexpr bool is_specialization_of_v = is_specialization_of<T, TMPL>::value;
-
-////////////////////////////////////////////////////////////////////////////////
-
-  // Create static array (similar to experimental::make_array)
-  template <typename T, T... args>
-  struct make_array_st {
-    constexpr static std::array<T, sizeof...(args)> const value{ args... };
-  };
-
-  template <typename T, T... args>
-  constexpr auto const& make_array{ make_array_st<T, args...>::value };
-
-  // Create static array from argument passing (similar to make_array)
-  template <typename T, typename... ARGS>
-  constexpr auto build_array (ARGS&&... args) {
-    return std::array<T, sizeof...(ARGS)>{ T(args)... };
-  }
-
-  // Ceiling division of two unsigned integers
-  // Thanks to https://stackoverflow.com/a/2745086/6441345
-  constexpr uintmax_t divceil (uintmax_t a, uintmax_t b) {
-    return 1 + ((a - 1) / b);
-  }
-};
-
 // log2 at compile time
 template <uintmax_t N>
 struct static_log2 {
@@ -153,25 +116,6 @@ struct pattern_array : make_pattern_array<
 template <typename T, bool less = false>
 constexpr std::array<T, static_log2_v<count_bits_v<T>>>
   pattern_array_v = pattern_array<T, less>::value;
-
-////////////////////////////////////////////////////////////////////////////////
-
-// Counts the number of set bits on a bitmask
-template <
-  typename T, uintmax_t i = 0,
-  typename = typename std::enable_if_t<std::is_integral_v<T>>
->
-constexpr T popcount (T n) {
-  if constexpr (i < static_log2_v<count_bits_v<T>>) {
-    return popcount<T, i + 1>(
-      (n & make_pattern_v<T, i, true>) + (
-      (n & make_pattern_v<T, i, false>) >> (T(1) << i))
-    );
-
-  } else {
-    return n;
-  }
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -323,3 +267,57 @@ static const std::function<T> noop{ noop_st<T>::value };
 template <typename R, typename... ARGS>
 static const std::function<R(ARGS...)>
   noop<std::function<R(ARGS...)>> = noop_st<std::function<R(ARGS...)>>::value;
+
+namespace util {
+  constexpr double PI = 3.141592653589793238463;
+
+  // Tests if a type is a specialization of a template
+  template <typename T, template <typename...> typename TMPL>
+  struct is_specialization_of : std::false_type {};
+
+  template <template <typename...> typename TMPL, typename... ARGS>
+  struct is_specialization_of<TMPL<ARGS...>, TMPL> : std::true_type {};
+
+  template <typename T, template <typename...> typename TMPL>
+  constexpr bool is_specialization_of_v = is_specialization_of<T, TMPL>::value;
+
+////////////////////////////////////////////////////////////////////////////////
+
+  // Create static array (similar to experimental::make_array)
+  template <typename T, T... args>
+  struct make_array_st {
+    constexpr static std::array<T, sizeof...(args)> const value{ args... };
+  };
+
+  template <typename T, T... args>
+  constexpr auto const& make_array{ make_array_st<T, args...>::value };
+
+  // Create static array from argument passing (similar to make_array)
+  template <typename T, typename... ARGS>
+  constexpr auto build_array (ARGS&&... args) {
+    return std::array<T, sizeof...(ARGS)>{ T(args)... };
+  }
+
+  // Ceiling division of two unsigned integers
+  // Thanks to https://stackoverflow.com/a/2745086/6441345
+  constexpr uintmax_t divceil (uintmax_t a, uintmax_t b) {
+    return 1 + ((a - 1) / b);
+  }
+
+  // Counts the number of set bits on a bitmask
+  template <
+    typename T, uintmax_t i = 0,
+    typename = typename std::enable_if_t<std::is_integral_v<T>>
+  >
+  constexpr T popcount (T n) {
+    if constexpr (i < static_log2_v<count_bits_v<T>>) {
+      return popcount<T, i + 1>(
+        (n & make_pattern_v<T, i, true>) + (
+        (n & make_pattern_v<T, i, false>) >> (T(1) << i))
+      );
+
+    } else {
+      return n;
+    }
+  }
+};

@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cstdint>
 
-namespace rss {
+namespace util::rss {
   uintmax_t peak (void);
   uintmax_t current (void);
 };

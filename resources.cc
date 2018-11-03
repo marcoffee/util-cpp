@@ -36,10 +36,10 @@
 #endif
 
 #else
-#error "Cannot define rss::peak() or rss::current() for an unknown OS."
+#error "Cannot define util::rss::peak() or util::rss::current() for an unknown OS."
 #endif
 
-namespace rss {
+namespace util::rss {
   /**
    * Returns the peak (maximum so far) resident set size (physical
    * memory use) measured in bytes, or zero if the value cannot be

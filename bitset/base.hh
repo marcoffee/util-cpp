@@ -16,12 +16,14 @@ class bitset {
   using bck_t = uintmax_t;
   // Size type
   using siz_t = uintmax_t;
+  // Reference type
+  using ref_t = uint32_t;
+
+  // Enumeration of possible outcomes from fast_compare
+  enum class compare { equal, different, inverted, unknown };
 
  private:
   struct impl {
-    // Reference type
-    using ref_t = uint32_t;
-
     // Bitset size
     siz_t size_ = 0;
     // Bitset number of set bits
@@ -58,9 +60,6 @@ class bitset {
   bck_t* end (void) { return this->begin() + this->buckets(); }
 
  public:
-  // Enumeration of possible outcomes from fast_compare
-  enum class compare { equal, different, inverted, unknown };
-
   // Helper members
   constexpr static siz_t const bits = std::numeric_limits<bck_t>::digits;
   constexpr static siz_t const bits_shift = static_log2_v<bitset::bits>;
@@ -92,11 +91,11 @@ class bitset {
 
     for (siz_t i = 0; i < last; ++i) {
       bs.data(i) = dist(rnd);
-      bs.impl_->popcount_ += ::popcount(bs.data(i));
+      bs.impl_->popcount_ += util::popcount(bs.data(i));
     }
 
     bs.back() = dist(rnd) & bs.last_mask();
-    bs.impl_->popcount_ += ::popcount(bs.back());
+    bs.impl_->popcount_ += util::popcount(bs.back());
 
     return bs;
   }
@@ -117,15 +116,18 @@ class bitset {
   static bitset&  MAJ (bitset a, bitset b, bitset c, bitset& out);
   static bitset&  ITE (bitset a, bitset b, bitset c, bitset& out);
 
+  static siz_t  AND_popcount (bitset a, bitset b);
+  static siz_t   OR_popcount (bitset a, bitset b);
+  static siz_t  XOR_popcount (bitset a, bitset b);
+  static siz_t  MAJ_popcount (bitset a, bitset b, bitset c);
+  static siz_t AND3_popcount (bitset a, bitset b, bitset c);
+  static siz_t  ITE_popcount (bitset a, bitset b, bitset c);
+
   // Build an array of all possible inputs' combinations
-  static void build_combinations (
-    bitset* bits, siz_t inputs,
-    siz_t use_bits = std::numeric_limits<siz_t>::max(),
-    siz_t const* positions = nullptr
-  );
+  static void build_combinations (bitset* bsets, siz_t inputs);
 
   // Default constructor
-  bitset (void) {}
+  constexpr bitset (void) {}
 
   // Constructor
   bitset (siz_t size, bool zeros = true, bool popcount = true)
@@ -228,7 +230,7 @@ class bitset {
 
   // Fills bitset with value
   void fill (bck_t value) {
-    siz_t const pop = ::popcount(value);
+    siz_t const pop = util::popcount(value);
     std::fill(this->begin(), this->end(), value ^ this->inverted());
     this->impl_->popcount_ = this->buckets() * pop;
 
@@ -239,7 +241,7 @@ class bitset {
   // Fills a bucket range on bitset with value
   void fill (siz_t begin, siz_t end, bck_t value) {
     // Fixes popcount
-    siz_t const new_pop = ::popcount(value) * (end - begin);
+    siz_t const new_pop = util::popcount(value) * (end - begin);
     siz_t const old_pop = bitset::popcount_range(
       this->begin() + begin, this->begin() + end
     );
@@ -278,8 +280,8 @@ class bitset {
     }
 
     // Fixes popcount
-    siz_t const old_pop = ::popcount(this->data(bucket));
-    this->impl_->popcount_ -= old_pop - ::popcount(value);
+    siz_t const old_pop = util::popcount(this->data(bucket));
+    this->impl_->popcount_ -= old_pop - util::popcount(value);
 
     this->data(bucket) = value;
   }
@@ -301,8 +303,8 @@ class bitset {
   // Fixes the last bucket
   template <bool pop>
   void fix_last (void) {
-    // If it fits, it does not require fixing
-    if (!this->fit()) {
+    // If it fits (it sits), it does not require fixing
+    if (this->fit()) {
       return;
     }
 
@@ -311,15 +313,20 @@ class bitset {
 
     if constexpr (pop) {
       // Updates popcount difference
-      this->impl_->popcount_ -= ::popcount(back) - ::popcount(new_back);
+      this->impl_->popcount_ -= util::popcount(back) - util::popcount(new_back);
     }
 
     back = new_back;
   }
 
+  // Test if two bitsets shame same pointer to impl
+  bool same_impl (bitset const& b) const {
+    return this->impl_ == b.impl_;
+  }
+
   // Shallow test if two bitsets are the same
   bool is (bitset const& b) const {
-    return this->impl_ == b.impl_ and this->inverted() == b.inverted();
+    return this->same_impl(b) and this->inverted() == b.inverted();
   }
 
   // Makes a fast comparison (constant time) between two bitsets
@@ -350,6 +357,17 @@ class bitset {
 
     // The function could not find a result on constant time
     return compare::unknown;
+  }
+
+  // Compares two bitsets according the fast_cmp flag
+  compare equal_to (bitset const& b, bool fast_cmp) const {
+    if (fast_cmp) {
+      // Make a fast comparison
+      return this->fast_compare(b);
+    }
+
+    // Make a full comparison
+    return (*this == b) ? compare::equal : compare::different;
   }
 
   // Brackets operator
@@ -412,6 +430,7 @@ class bitset {
   bck_t inverted (void) const { return this->inverted_; }
   bool fit (void) const { return (this->size() % bitset::bits) == 0; }
   bool valid (void) const { return this->impl_ != nullptr; }
+  ref_t ref (void) const { return this->impl_->ref_; }
 
   // Number of buckets available
   siz_t buckets (void) const {

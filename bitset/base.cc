@@ -2,12 +2,17 @@
 #include "base.hh"
 #include "macros.hh"
 
+// Bucket type
+using bck_t = bitset::bck_t;
+// Size type
+using siz_t = bitset::siz_t;
+
 // Copy metadata from other bitset
 void bitset::copy_meta (bitset const& ot) {
   this->inverted_ = ot.inverted_;
 }
 
-// Release bitset values
+// Release bitset storage
 void bitset::release (void) {
   this->impl_ = nullptr;
   this->inverted_ = 0;
@@ -34,7 +39,10 @@ bitset& bitset::copy_from (bitset& ot) {
     this->free();
     this->copy_meta(ot);
     this->impl_ = ot.impl_;
-    ++this->impl_->ref_;
+
+    if (this->impl_) {
+      ++this->impl_->ref_;
+    }
   }
 
   return *this;
@@ -53,48 +61,40 @@ bitset& bitset::move_from (bitset& ot) {
 }
 
 // Counts the number of set bits on a given region
-bitset::siz_t bitset::popcount_range (bck_t const* begin, bck_t const* end) {
+siz_t bitset::popcount_range (bck_t const* begin, bck_t const* end) {
   siz_t result = 0;
 
   #pragma omp simd reduction(+: result)
   for (bck_t const* i = begin; i < end; ++i) {
-    result += ::popcount(*i);
+    result += util::popcount(*i);
   }
 
   return result;
 }
 
 // Build an array of all possible inputs' combinations
-void bitset::build_combinations (
-  bitset* bits, siz_t inputs, siz_t use_bits, siz_t const* positions
-) {
+void bitset::build_combinations (bitset* bsets, siz_t inputs) {
   // Build a lookup table
-  static constexpr std::array const lookup{ pattern_array_v<bitset::bck_t> };
+  static constexpr std::array const lookup{ pattern_array_v<bck_t> };
 
-  // Number of bits to use
-  use_bits = std::min(use_bits, inputs);
-
-  siz_t const p2 = bitset::siz_t{ 1 } << use_bits;
+  siz_t const p2 = siz_t{ 1 } << inputs;
   siz_t const filled = std::min(inputs, bitset::bits_shift);
   siz_t const not_filled = inputs - filled;
-  siz_t const zeroed = inputs - use_bits;
 
   #pragma omp parallel for schedule(dynamic)
   for (siz_t i = 0; i < inputs; ++i) {
-    // Build bitset
-    bitset& bs = bits[positions ? positions[i] : i];
-    bs = bitset{ p2 };
+    // Allocate bitset
+    bitset& bs = bsets[i];
+    bs = bitset{ p2, false, false };
 
-    // Skip bitsets that will remain zeroed because of the number of bits used
-    if (i < zeroed) {
-      continue;
-    }
-
-    // Fill bitsets where the pattern will be smaller than 64 bits
+    // Fill bitsets where the pattern will be smaller than bitset::bits bits
     if (i >= not_filled) {
       bs.fill(lookup[(lookup.size() + i) - inputs]);
       continue;
     }
+
+    // Fill the bitset with zero
+    bs.reset();
 
     // Otherwise, fill the buckets according to its position
     siz_t const contig = 1 << (not_filled - i - 1);
@@ -118,7 +118,7 @@ bitset& bitset::AND (bitset a, bitset b, bitset& out) {
   siz_t const b_p = b.popcount(), b_s = b.size();
 
   // If a is all zeroes, b is all ones, or a is equal to b
-  if (a_p == 0 or b_p == b_s or a.fast_compare(b) == bitset::compare::equal) {
+  if (a_p == 0 or b_p == b_s or a.fast_compare(b) == compare::equal) {
     out = std::move(a);
 
   // If b is all zeroes or a is all ones
@@ -128,12 +128,12 @@ bitset& bitset::AND (bitset a, bitset b, bitset& out) {
   // Evaluate the AND
   } else {
     if (!out.valid() or out.size() < a.size()) {
-      out = bitset{ a.size() };
+      out = bitset{ a.size(), false, false };
     }
 
+    // Remove inversion flag
+    out.inverted_ = 0;
     OP_2(a, b, out, &, EMPTY_ARG);
-    out.fix_last<false>();
-    out.fix_popcount();
   }
 
   return out;
@@ -146,7 +146,7 @@ bitset& bitset::OR (bitset a, bitset b, bitset& out) {
   siz_t const b_p = b.popcount(), b_s = b.size();
 
   // If a is all ones, b is all zeroes, or a is equal to b
-  if (a_p == a_s or b_p == 0 or a.fast_compare(b) == bitset::compare::equal) {
+  if (a_p == a_s or b_p == 0 or a.fast_compare(b) == compare::equal) {
     out = std::move(a);
 
   // if b is all ones or a is all zeroes
@@ -156,12 +156,12 @@ bitset& bitset::OR (bitset a, bitset b, bitset& out) {
   // Evaluate the OR
   } else {
     if (!out.valid() or out.size() < a.size()) {
-      out = bitset{ a.size() };
+      out = bitset{ a.size(), false, false };
     }
 
+    // Remove inversion flag
+    out.inverted_ = 0;
     OP_2(a, b, out, |, EMPTY_ARG);
-    out.fix_last<false>();
-    out.fix_popcount();
   }
 
   return out;
@@ -192,12 +192,12 @@ bitset& bitset::XOR (bitset a, bitset b, bitset& out) {
   // Evaluate the XOR
   } else {
     if (!out.valid() or out.size() < a.size()) {
-      out = bitset{ a.size() };
+      out = bitset{ a.size(), false, false };
     }
 
+    // Remove inversion flag
+    out.inverted_ = 0;
     OP_2(a, b, out, ^, EMPTY_ARG);
-    out.fix_last<false>();
-    out.fix_popcount();
   }
 
   return out;
@@ -206,8 +206,8 @@ bitset& bitset::XOR (bitset a, bitset b, bitset& out) {
 // Bitwise MAJ of three bitsets
 // __attribute__((target("no-sse")))
 bitset& bitset::MAJ (bitset a, bitset b, bitset c, bitset& out) {
-  constexpr auto equal = bitset::compare::equal;
-  constexpr auto inverted = bitset::compare::inverted;
+  constexpr auto equal = compare::equal;
+  constexpr auto inverted = compare::inverted;
 
   siz_t const a_p = a.popcount(), a_s = a.size();
   siz_t const b_p = b.popcount(), b_s = b.size();
@@ -255,81 +255,87 @@ bitset& bitset::MAJ (bitset a, bitset b, bitset c, bitset& out) {
   // Evaluate the MAJ
   } else {
     if (!out.valid() or out.size() < a.size()) {
-      out = bitset{ a.size() };
+      out = bitset{ a.size(), false, false };
     }
 
+    // Remove inversion flag
+    out.inverted_ = 0;
     OP_3(a, b, c, out, maj, EMPTY_ARG);
-    out.fix_last<false>();
-    out.fix_popcount();
   }
   return out;
 }
 
-// Bitwise ITE of three bitsets
+// Memory aware popcount of bitwise AND between two bitsets
 // __attribute__((target("no-sse")))
-bitset& bitset::ITE (bitset a, bitset b, bitset c, bitset& out) {
-  siz_t const a_p = a.popcount(), a_s = a.size();
+siz_t bitset::AND_popcount (bitset a, bitset b) {
+  siz_t out = 0;
+  POP_2(a, b, out, &, EMPTY_ARG);
+  return out;
+}
 
-  // If a is all zeroes or b is equal to c
-  if (a_p == 0 or b.fast_compare(c) == bitset::compare::equal) {
-    out = std::move(c);
+// Memory aware popcount of bitwise OR between two bitsets
+// __attribute__((target("no-sse")))
+siz_t bitset::OR_popcount (bitset a, bitset b) {
+  siz_t out = 0;
+  POP_2(a, b, out, |, EMPTY_ARG);
+  return out;
+}
 
-  // If a is all ones
-  } else if (a_p == a_s) {
-    out = std::move(b);
+// Memory aware popcount of bitwise XOR between two bitsets
+// __attribute__((target("no-sse")))
+siz_t bitset::XOR_popcount (bitset a, bitset b) {
+  siz_t out = 0;
+  POP_2(a, b, out, ^, EMPTY_ARG);
+  return out;
+}
 
-  // Evaluate the ITE
-  } else {
-    if (!out.valid() or out.size() < a.size()) {
-      out = bitset{ a.size() };
-    }
+// Memory aware popcount of bitwise MAJ between three bitsets
+// __attribute__((target("no-sse")))
+siz_t bitset::MAJ_popcount (bitset a, bitset b, bitset c) {
+  siz_t out = 0;
+  POP_3(a, b, c, out, maj, EMPTY_ARG);
+  return out;
+}
 
-    OP_3(a, b, c, out, ite, EMPTY_ARG);
-    out.fix_last<false>();
-    out.fix_popcount();
-  }
-
+// Memory aware popcount of bitwise AND between three bitsets
+// __attribute__((target("no-sse")))
+siz_t bitset::AND3_popcount (bitset a, bitset b, bitset c) {
+  siz_t out = 0;
+  POP_3(a, b, c, out, and3, EMPTY_ARG);
   return out;
 }
 
 // Generate a copy
 bitset bitset::copy (void) const {
   bitset bs{ this->size(), false, false };
+  bs.copy_meta(*this);
+  bs.impl_->popcount_ = this->impl_->popcount_;
   std::copy_n(this->data(), this->buckets(), bs.data());
-  bs.impl_->popcount_ = this->popcount();
   return bs;
 }
 
 // Compare two bitsets
 bool bitset::operator == (bitset const& ot) const {
   // Try fast comparison
-  bitset::compare const cmp = this->fast_compare(ot);
+  compare const cmp = this->fast_compare(ot);
 
-  if (cmp == bitset::compare::equal) {
+  if (cmp == compare::equal) {
     return true;
 
-  } else if (cmp != bitset::compare::unknown) {
+  } else if (cmp != compare::unknown) {
     return false;
   }
 
-  // Non-masked equality test
-  if (this->inverted() == ot.inverted()) {
-    return std::equal(
-      this->data(), this->data() + this->buckets(),
-      ot.data(), ot.data() + ot.buckets()
-    );
-  }
-
-  // Masked equality test
   siz_t const last_pos = this->buckets() - 1;
+  bool eq = true;
 
+  // Full equality test
+  #pragma omp simd reduction(&&: eq)
   for (siz_t i = 0; i < last_pos; ++i) {
-    if (this->bucket(i) != ot.bucket(i)) {
-      return false;
-    }
+    eq = eq and this->bucket(i) != ot.bucket(i);
   }
 
-  return (
+  return eq and (
     (this->bucket(last_pos) & this->last_mask()) ==
     (ot.bucket(last_pos) & ot.last_mask())
   );
@@ -337,9 +343,6 @@ bool bitset::operator == (bitset const& ot) const {
 
 // Converts the bitset to a hex string
 bitset::operator std::string (void) const {
-  using bck_t = bitset::bck_t;
-  using siz_t = bitset::siz_t;
-
   // Empty bitset
   if (!(this->valid() and this->buckets())) {
     return "0";
@@ -367,8 +370,6 @@ bitset::operator std::string (void) const {
   bck_t const bck = this->bucket(last_pos) & this->last_mask();
   siz_t const wid = (this->last_bits() + 3) / 4;
   ss << std::hex << std::setw(wid) << std::setfill('0') << std::right << bck;
-
-  std::cout << wid << std::endl;
 
   // Copy inverted to string
   std::string const& str = ss.str();

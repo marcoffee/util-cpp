@@ -16,16 +16,26 @@
 
 namespace util {
 
+  struct default_streamer {
+    template <typename T>
+    void operator () (std::ostream& out, T const& value) const {
+      out << value;
+    }
+  };
+
   // Class to print containers
-  template <typename T>
+  template <typename T, typename P = default_streamer>
   class printer {
    public:
+    using iterator = typename T::iterator;
     using const_iterator = typename T::const_iterator;
+    using streamer = P;
 
    private:
     T const& cont_;
     uintmax_t limit_;
     std::string_view sep_, align_, border_, open_, close_;
+    streamer stream_;
 
     // Internal function to print an iterator range
     void print_iterator (
@@ -36,7 +46,8 @@ namespace util {
           out << this->sep_;
         }
 
-        out << this->align_ << *it;
+        out << this->align_;
+        this->stream_(out, *it);
       }
     }
 
@@ -67,13 +78,13 @@ namespace util {
           auto stop_it = std::next(this->begin(), pieces);
           auto rest_it = std::next(this->begin(), this->size() - pieces);
 
-          print_iterator(out, this->begin(), stop_it);
+          this->print_iterator(out, this->begin(), stop_it);
           out << this->sep_ << this->align_ << "..." << this->sep_;
-          print_iterator(out, rest_it, this->end());
+          this->print_iterator(out, rest_it, this->end());
 
         } else {
           // Print the whole container
-          print_iterator(out, this->begin(), this->end());
+          this->print_iterator(out, this->begin(), this->end());
         }
 
         out << this->border_;
@@ -90,6 +101,11 @@ namespace util {
     bool empty (void) const { return this->cont_.empty(); }
 
     // Simple setters
+    constexpr printer& limit (uintmax_t limit) {
+      this->limit_ = limit;
+      return *this;
+    }
+
     constexpr printer& sep (std::string_view sep) {
       this->sep_ = sep;
       return *this;
@@ -112,11 +128,6 @@ namespace util {
 
     constexpr printer& close (std::string_view close) {
       this->close_ = close;
-      return *this;
-    }
-
-    constexpr printer& limit (uintmax_t limit) {
-      this->limit_ = limit;
       return *this;
     }
   };

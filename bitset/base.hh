@@ -341,12 +341,12 @@ class bitset {
     siz_t const b_p = b.popcount();
 
     // If they differ on size or popcount, they are different
-    if (this->size() > b.size() or b.size() > this->size() or a_p != b_p) {
+    if (this->size() != b.size() or a_p != b_p) {
       return compare::different;
     }
 
     // If they are the same or they are all set or reset, they are the same
-    if (this->is(b) or (a_p == b_p and (a_p == this->size() or a_p == 0))) {
+    if (this->is(b) or a_p == this->size() or a_p == 0) {
       return compare::equal;
     }
 
@@ -357,17 +357,6 @@ class bitset {
 
     // The function could not find a result on constant time
     return compare::unknown;
-  }
-
-  // Compares two bitsets according the fast_cmp flag
-  compare equal_to (bitset const& b, bool fast_cmp) const {
-    if (fast_cmp) {
-      // Make a fast comparison
-      return this->fast_compare(b);
-    }
-
-    // Make a full comparison
-    return (*this == b) ? compare::equal : compare::different;
   }
 
   // Brackets operator

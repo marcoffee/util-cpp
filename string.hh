@@ -6,7 +6,6 @@
 #include <string>
 #include <string_view>
 #include "util_macro.hh"
-#include "iterator/base.hh"
 
 namespace util::string {
 

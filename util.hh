@@ -8,8 +8,10 @@
 
 #include "util_constexpr.hh"
 #include "base.hh"
+#include "unit.hh"
 #include "atomic.hh"
 #include "pointer.hh"
+#include "eta.hh"
 #include "vector.hh"
 #include "stream.hh"
 #include "string.hh"

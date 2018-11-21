@@ -304,20 +304,33 @@ namespace util {
     return 1 + ((a - 1) / b);
   }
 
-  // Counts the number of set bits on a bitmask
+  // Counts the number of set bits on <value>
   template <
     typename T, uintmax_t i = 0,
     typename = typename std::enable_if_t<std::is_integral_v<T>>
   >
-  constexpr T popcount (T n) {
+  constexpr T popcount (T value) {
     if constexpr (i < static_log2_v<count_bits_v<T>>) {
       return popcount<T, i + 1>(
-        (n & make_pattern_v<T, i, true>) + (
-        (n & make_pattern_v<T, i, false>) >> (T(1) << i))
+        (value & make_pattern_v<T, i, true>) + (
+        (value & make_pattern_v<T, i, false>) >> (T(1) << i))
       );
 
     } else {
-      return n;
+      return value;
     }
+  }
+
+  // Compile time power of <value>
+  template <intmax_t EXP, typename T>
+  constexpr T pow (T const& value) {
+    if constexpr (EXP > 0) {
+      return value * pow<EXP - 1>(value);
+
+    } else if constexpr (EXP < 0) {
+      return pow<EXP + 1>(value) / value;
+    }
+
+    return T{ 1 };
   }
 };

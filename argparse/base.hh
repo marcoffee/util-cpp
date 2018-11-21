@@ -13,16 +13,24 @@ namespace util {
 
   template <typename T>
   using string_map = std::unordered_map<std::string, T>;
+
   template <typename T>
   using string_pair = std::pair<std::string, T>;
+
+  template <typename T>
+  using conversor = std::function<T(std::string const&)>;
 
   using string_set = std::unordered_set<std::string>;
   using string_mapset = string_map<string_set>;
   using string_vector = std::vector<std::string>;
+  using string_vector_iterator = string_vector::const_iterator;
 
   class argparse {
 
    public:
+    template <typename T>
+    class iterator;
+
     class params;
 
     class option {
@@ -95,11 +103,38 @@ namespace util {
 
   };
 
-  class argparse::params {
+  template <typename T>
+  class argparse::iterator {
+    using difference_type = intmax_t;
+    using value_type = T const;
+    using pointer = T const;
+    using reference = T const;
+    using iterator_category = std::bidirectional_iterator_tag;
+
+    string_vector_iterator real_;
+    conversor<T> convert_;
 
    public:
-    template <typename T>
-    using conversor = std::function<T(std::string const&)>;
+    iterator (void) {}
+
+    iterator (string_vector_iterator const real, conversor<T> const& convert)
+    : real_{ real }, convert_{ convert } {}
+
+    iterator& operator ++ (void) { ++this->real_; return *this; }
+    iterator& operator -- (void) { --this->real_; return *this; }
+
+    iterator operator ++ (int) { return iterator(this->real_++, this->convert_); }
+    iterator operator -- (int) { return iterator(this->real_--, this->convert_); }
+
+    bool operator == (iterator const& ot) { return this->real_ == ot.real_; }
+    bool operator != (iterator const& ot) { return this->real_ != ot.real_; }
+
+    T const operator * (void) { return this->convert_(*this->real_); }
+    T const operator -> (void) { return **this; }
+
+  };
+
+  class argparse::params {
 
    private:
     friend class argparse;
@@ -107,34 +142,6 @@ namespace util {
 
     string_map<string_vector> data_;
     string_map<bool> set_;
-    using map_iterator = string_vector::const_iterator;
-
-    template <typename T>
-    class iterator
-    : public std::iterator<std::bidirectional_iterator_tag, T const> {
-
-      map_iterator real_;
-      conversor<T> convert_;
-
-     public:
-      iterator (void) {}
-
-      iterator (map_iterator const real, conversor<T> const& convert)
-      : real_{ real }, convert_{ convert } {}
-
-      inline iterator& operator ++ (void) { ++this->real_; return *this; }
-      inline iterator& operator -- (void) { --this->real_; return *this; }
-
-      inline iterator operator ++ (int) { return iterator(this->real_++, this->convert_); }
-      inline iterator operator -- (int) { return iterator(this->real_--, this->convert_); }
-
-      inline bool operator == (iterator const& ot) { return this->real_ == ot.real_; }
-      inline bool operator != (iterator const& ot) { return this->real_ != ot.real_; }
-
-      inline T const operator * (void) { return this->convert_(*this->real_); }
-      inline T const operator -> (void) { return **this; }
-
-    };
 
    public:
     template <typename T>

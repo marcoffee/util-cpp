@@ -112,7 +112,9 @@ void bitset::build_combinations (bitset* bsets, siz_t inputs) {
 }
 
 // Bitwise AND of two bitsets
-// __attribute__((target("no-sse")))
+#ifdef NOSIMD
+__attribute__((target("no-sse")))
+#endif
 bitset& bitset::AND (bitset a, bitset b, bitset& out) {
   siz_t const a_p = a.popcount(), a_s = a.size();
   siz_t const b_p = b.popcount(), b_s = b.size();
@@ -140,7 +142,9 @@ bitset& bitset::AND (bitset a, bitset b, bitset& out) {
 }
 
 // Bitwise OR of two bitsets
-// __attribute__((target("no-sse")))
+#ifdef NOSIMD
+__attribute__((target("no-sse")))
+#endif
 bitset& bitset::OR (bitset a, bitset b, bitset& out) {
   siz_t const a_p = a.popcount(), a_s = a.size();
   siz_t const b_p = b.popcount(), b_s = b.size();
@@ -168,7 +172,9 @@ bitset& bitset::OR (bitset a, bitset b, bitset& out) {
 }
 
 // Bitwise XOR of two bitsets
-// __attribute__((target("no-sse")))
+#ifdef NOSIMD
+__attribute__((target("no-sse")))
+#endif
 bitset& bitset::XOR (bitset a, bitset b, bitset& out) {
   siz_t const a_p = a.popcount(), a_s = a.size();
   siz_t const b_p = b.popcount(), b_s = b.size();
@@ -204,7 +210,9 @@ bitset& bitset::XOR (bitset a, bitset b, bitset& out) {
 }
 
 // Bitwise MAJ of three bitsets
-// __attribute__((target("no-sse")))
+#ifdef NOSIMD
+__attribute__((target("no-sse")))
+#endif
 bitset& bitset::MAJ (bitset a, bitset b, bitset c, bitset& out) {
   constexpr auto equal = compare::equal;
   constexpr auto inverted = compare::inverted;
@@ -266,7 +274,9 @@ bitset& bitset::MAJ (bitset a, bitset b, bitset c, bitset& out) {
 }
 
 // Memory aware popcount of bitwise AND between two bitsets
-// __attribute__((target("no-sse")))
+#ifdef NOSIMD
+__attribute__((target("no-sse")))
+#endif
 siz_t bitset::AND_popcount (bitset a, bitset b) {
   siz_t out = 0;
   POP_2(a, b, out, &, EMPTY_ARG);
@@ -274,7 +284,9 @@ siz_t bitset::AND_popcount (bitset a, bitset b) {
 }
 
 // Memory aware popcount of bitwise OR between two bitsets
-// __attribute__((target("no-sse")))
+#ifdef NOSIMD
+__attribute__((target("no-sse")))
+#endif
 siz_t bitset::OR_popcount (bitset a, bitset b) {
   siz_t out = 0;
   POP_2(a, b, out, |, EMPTY_ARG);
@@ -282,7 +294,9 @@ siz_t bitset::OR_popcount (bitset a, bitset b) {
 }
 
 // Memory aware popcount of bitwise XOR between two bitsets
-// __attribute__((target("no-sse")))
+#ifdef NOSIMD
+__attribute__((target("no-sse")))
+#endif
 siz_t bitset::XOR_popcount (bitset a, bitset b) {
   siz_t out = 0;
   POP_2(a, b, out, ^, EMPTY_ARG);
@@ -290,7 +304,9 @@ siz_t bitset::XOR_popcount (bitset a, bitset b) {
 }
 
 // Memory aware popcount of bitwise MAJ between three bitsets
-// __attribute__((target("no-sse")))
+#ifdef NOSIMD
+__attribute__((target("no-sse")))
+#endif
 siz_t bitset::MAJ_popcount (bitset a, bitset b, bitset c) {
   siz_t out = 0;
   POP_3(a, b, c, out, maj, EMPTY_ARG);
@@ -298,7 +314,9 @@ siz_t bitset::MAJ_popcount (bitset a, bitset b, bitset c) {
 }
 
 // Memory aware popcount of bitwise AND between three bitsets
-// __attribute__((target("no-sse")))
+#ifdef NOSIMD
+__attribute__((target("no-sse")))
+#endif
 siz_t bitset::AND3_popcount (bitset a, bitset b, bitset c) {
   siz_t out = 0;
   POP_3(a, b, c, out, and3, EMPTY_ARG);

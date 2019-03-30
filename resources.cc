@@ -127,4 +127,11 @@ namespace util::rss {
 
   #endif
   }
+
+  #if UNIX_DEF or OSX_DEF
+  bool limit (uintmax_t mem) {
+    struct rlimit the_limit{ mem, RLIM_INFINITY };
+    return setrlimit(RLIMIT_AS, &the_limit) == 0;
+  }
+  #endif
 };

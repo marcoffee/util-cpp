@@ -111,6 +111,10 @@ void bitset::build_combinations (bitset* bsets, siz_t inputs) {
   }
 }
 
+#ifdef NOSIMD
+#pragma message ( "SIMD disabled!" )
+#endif
+
 // Bitwise AND of two bitsets
 #ifdef NOSIMD
 __attribute__((target("no-sse")))

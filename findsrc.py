@@ -1,29 +1,28 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
-import os
 import sys
 import argparse
-import itertools as it
+from pathlib import Path
+from collections.abc import Generator, Sequence
 
-class HeaderNotFound (Exception):
+
+class HeaderNotFoundError (Exception):
     """ Exception to warn about header not found """
 
-    def __init__ (self, header, fname, line):
+    def __init__ (self, header: str, fname: Path, line: int) -> None:
         """ Constructs HeaderNotFound exception """
-        super().__init__(
-            "Header {} not found at {}@{}".format(header, fname, line)
-        )
+        super().__init__(f"Header {header} not found at {fname}@{line}.")
 
-def fetch_headers (fname):
+def fetch_headers (fname: Path) -> Generator[Path, None]:
     """ Fetch all headers from a file """
 
     # Gets file directory
-    fdir = os.path.dirname(fname)
+    fdir = fname.parent
     lineno = 0
 
-    with open(fname) as file:
+    with fname.open("rt") as file:
         # Iterates over trimmed lines
-        for line in map(str.strip, file):
+        for line in map(str.lstrip, file):
             lineno += 1
 
             if not line.startswith("#include"):
@@ -37,7 +36,9 @@ def fetch_headers (fname):
             comm = line.find("//")
 
             if comm != -1:
-                line = line[ : comm ].rstrip()
+                line = line[ : comm ]
+
+            line = line.rstrip()
 
             # Gets only headers between quotes (assumes that they are local)
             if line[0] == "\"" and line[-1] == "\"":
@@ -45,38 +46,46 @@ def fetch_headers (fname):
                 hname = line[ 1 : -1 ]
 
                 # Appends file directory to header location
-                header = os.path.join(fdir, hname)
+                header = fdir / hname
 
-                if not os.path.isfile(header):
-                    raise HeaderNotFound(hname, fname, lineno)
+                if not header.is_file():
+                    raise HeaderNotFoundError(hname, fname, lineno)
 
                 yield header
 
 # Build argument parser
-argparser = argparse.ArgumentParser(prog = os.path.basename(__file__))
+argparser = argparse.ArgumentParser(prog=Path(__file__).name)
 
-argparser.add_argument("files", nargs = "+", help = "Starting files.")
-argparser.add_argument("-headers", default = None, nargs = "+", help = "Supported header extensions.")
-argparser.add_argument("-sources", default = [ "cc", "cpp" ], nargs = "+", help = "Supported source extensions.")
-argparser.add_argument("-ignore", default = [], nargs = "+", help = "Files to ignore.")
-argparser.add_argument("-basepath", default = ".", help = "Base directory for files.")
-argparser.add_argument("-print-headers", action = "store_true", help = "Also print headers alongsize results.")
+argparser.add_argument("files", type=Path, nargs="+", help="Starting files.")
+argparser.add_argument(
+    "-he", "--headers", default=None, nargs="+", help="Supported header extensions."
+)
+argparser.add_argument(
+    "-se", "--sources", default=[ "cc", "cpp" ], nargs="+", help="Supported source extensions."
+)
+argparser.add_argument("-i", "--ignore", type=Path, default=[], nargs="+", help="Files to ignore.")
+argparser.add_argument(
+    "-b", "--basepath", type=Path, default=Path.cwd(), help="Base directory for files."
+)
+argparser.add_argument(
+    "-p", "--print-headers", action="store_true", help="Also print headers alongsize results."
+)
 
-def main (argv):
+def main (argv: Sequence[str]) -> None:
     """ Main function """
 
     # Parse arguments
     args = argparser.parse_args(argv)
-    headers = set(args.headers) if args.headers else None
-    sources = set(ext.lstrip(".") for ext in args.sources)
+    headers: frozenset[str] = frozenset(args.headers) if args.headers else None
+    sources: frozenset[str] = frozenset(ext.lstrip(".") for ext in args.sources)
 
-    result = []
-    files = list(args.files)
-    found = { os.path.relpath(ign, args.basepath) for ign in args.ignore }
+    result: list[Path] = []
+    files: list[Path] = list(args.files)
+    found: set[Path] = { ign.relative_to(args.basepath) for ign in args.ignore }
 
     # Iterate over files
     while files:
-        fname = os.path.relpath(files.pop(), args.basepath)
+        fname = files.pop().resolve().relative_to(args.basepath)
 
         # Ignore duplicate files
         if fname in found:
@@ -84,8 +93,7 @@ def main (argv):
 
         # Test if file is valid
         found.add(fname)
-        name, ext = os.path.splitext(fname)
-        ext = ext.lstrip(".")
+        ext = fname.suffix.lstrip(".")
 
         # Add file to found sources
         if ext in sources:
@@ -101,21 +109,21 @@ def main (argv):
 
             # Fetch sources by name
             for ext in sources:
-                sname = "{}.{}".format(name, ext)
+                sname = fname.with_suffix(f".{ext}")
 
-                if os.path.isfile(sname):
+                if sname.is_file():
                     files.append(sname)
 
         try:
             # Fetch headers from file
             files.extend(fetch_headers(fname))
 
-        except HeaderNotFound as e:
-            print(e, file = sys.stderr)
+        except HeaderNotFoundError as e:
+            print(e, file=sys.stderr)
             exit(1)
 
     # Print results
-    print(" ".join(result))
+    print(" ".join(map(str, result)))
 
 if __name__ == "__main__":
     main(sys.argv[ 1 : ])

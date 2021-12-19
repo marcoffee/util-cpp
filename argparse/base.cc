@@ -10,9 +10,9 @@ namespace util {
       this->set_[v] = false;
     }
 
-    for (string_pair<std::string> const& kv : def) {
-      this->data_.emplace(kv.first, empty_vector).first->second.emplace_back(kv.second);
-      this->set_[kv.first] = false;
+    for (auto const& [ key, value ] : def) {
+      this->data_.emplace(key, empty_vector).first->second.emplace_back(value);
+      this->set_[key] = false;
     }
   }
 
@@ -68,11 +68,11 @@ namespace util {
   }
 
   std::ostream& operator << (std::ostream& out, argparse::params const& args) {
-    for (string_pair<string_vector> const& kv : args.data_) {
-      out << kv.first << ": ";
+    for (auto const& [ key, value ] : args.data_) {
+      out << key << ": ";
       bool first = true;
 
-      for (std::string const& v : kv.second) {
+      for (std::string const& v : value) {
         if (!first) {
           out << ", ";
         } else {
@@ -239,8 +239,8 @@ namespace util {
       }
     }
 
-    for (string_pair<option> const& name_opt : this->options_) {
-      this->assert_param_required(name_opt.first, name_opt.second, result);
+    for (auto const& [ name, opt ] : this->options_) {
+      this->assert_param_required(name, opt, result);
     }
 
     return result;
